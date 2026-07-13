@@ -122,9 +122,19 @@ does at least one of those three things end to end.
 - No lint/format tooling is wired up (no package.json) — `node --check
   path/to/Script.js` is the syntax gate CI runs; run it locally before
   committing a new script.
-- Tests: this repo's "test" is the CI syntax-check (`.github/workflows/ci.yml`)
-  plus, ideally, actually running the script in a real Opal client before
-  opening a PR — see CONTRIBUTING.md.
+- Tests: `tests/` holds a real Node (`node:test`) suite, but it only covers
+  what's testable outside the game engine — pure helper functions with no
+  proxy-global dependencies (tick/clock math, damage formulas, string-keyword
+  heuristics). `tests/opal-stub.js` installs minimal fakes of the engine
+  globals so a script's top-level `registerScript(...)` call doesn't throw
+  under plain Node; a script that wants to be testable exports its pure
+  helpers with a guarded `if (typeof module !== "undefined" && module.exports)
+  module.exports = { ... };` at the very bottom (see `DayCycleClock.js`,
+  `FallWarning.js`, `AutoToolSwitcher.js` for the pattern). Render/tick logic
+  that only makes sense inside a live Opal client is out of scope for this
+  suite — that gets exercised by actually running the script in-game before
+  opening a PR (see CONTRIBUTING.md). Run the suite with
+  `node --test tests/*.test.js`.
 - Commits: Conventional Commits, scoped to the folder when it helps
   (`feat(world): add ...`). **You own your commits, including code an AI
   wrote — no AI-attribution trailers.**

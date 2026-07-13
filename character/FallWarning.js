@@ -133,3 +133,12 @@ script.registerModule(
         });
     },
 );
+
+// -----------------------------------------------------------------------------
+//  Test hook. `module` does not exist inside the Opal/GraalVM runtime, so this
+//  is always skipped there — it only runs under plain Node, where tests/
+//  import the pure damage-estimate formula in isolation. See tests/FallWarning.test.js.
+// -----------------------------------------------------------------------------
+if (typeof module !== "undefined" && module.exports) {
+    module.exports = { estimateFallDamage, SAFE_FALL_BLOCKS };
+}

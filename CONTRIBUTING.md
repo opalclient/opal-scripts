@@ -44,10 +44,17 @@ for the full API reference.
    - Colors built with `renderer.color(r, g, b[, a])` — never a raw
      `0xAARRGGBB` literal (see [CLAUDE.md](CLAUDE.md) for why).
    - `authors` in `registerScript({ ... })` set to your name/handle.
-4. **Test it in a real Opal client** before opening a PR — a script that only
+4. **If your script has a genuinely pure helper function** (math, string
+   formatting, keyword matching — anything with no `player`/`world`/`renderer`
+   dependency), export it with a guarded
+   `if (typeof module !== "undefined" && module.exports) module.exports = { ... };`
+   at the bottom of the file and add a matching test under `tests/`. See
+   `world/DayCycleClock.js` + `tests/DayCycleClock.test.js` for the pattern,
+   and [CLAUDE.md](CLAUDE.md) for why this is the testable slice of a script.
+5. **Test it in a real Opal client** before opening a PR — a script that only
    compiles but has never actually been run in-game is not ready.
-5. **Update the README** — add a row to the category table for your script.
-6. **Update `llms.txt`** — add a link-per-file entry for your script.
+6. **Update the README** — add a row to the category table for your script.
+7. **Update `llms.txt`** — add a link-per-file entry for your script.
 
 ## Pull request workflow
 
@@ -57,6 +64,8 @@ for the full API reference.
    `fix/short-description`.
 3. **Run `node --check path/to/YourScript.js`** locally — this is the same
    syntax gate CI runs, and it's the fastest way to catch a typo before push.
+   If you added or changed a pure helper, also run
+   `node --test tests/*.test.js`.
 4. **Commit messages** follow [Conventional Commits](https://www.conventionalcommits.org/)
    (see below).
 5. **PR description**: explain *why*, not just *what*. Link the issue

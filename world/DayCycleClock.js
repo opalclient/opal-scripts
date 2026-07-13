@@ -220,3 +220,12 @@ script.registerModule(
         }
     },
 );
+
+// -----------------------------------------------------------------------------
+//  Test hook. `module` does not exist inside the Opal/GraalVM runtime, so this
+//  is always skipped there — it only runs under plain Node, where tests/
+//  import the pure tick/clock conversions in isolation. See tests/DayCycleClock.test.js.
+// -----------------------------------------------------------------------------
+if (typeof module !== "undefined" && module.exports) {
+    module.exports = { ticksToHour, formatClock, phaseLabel, TICKS_PER_DAY };
+}

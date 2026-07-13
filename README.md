@@ -58,8 +58,13 @@ opal-scripts/
 ├── character/    player, movement, rotation, and inventory proxies
 ├── world/        world and esp proxies
 ├── ui/           renderer and palette (command-palette view) proxies
-└── combo/        scripts that deliberately wire several proxies together
+├── combo/        scripts that deliberately wire several proxies together
+└── tests/        Node test-runner suite for the pure, engine-independent
+                  helper functions a few scripts export (see CLAUDE.md)
 ```
+
+Run the test suite with `node --test tests/*.test.js` — no install step needed,
+it uses Node's built-in test runner.
 
 ## Examples
 

@@ -2,11 +2,16 @@
 #
 # This repo has no package.json and no bundler — every example is a
 # standalone .js file loaded directly by Opal's GraalVM scripting engine, so
-# there is nothing to "build". The gate that actually matters is: every
-# script must be syntactically valid JavaScript. `node --check` parses each
-# file without executing it, which is exactly the right level of validation
-# for scripts whose globals (`registerScript`, `renderer`, `mc`, ...) only
-# exist inside the running Opal client and can't be mocked cheaply in CI.
+# there is nothing to "build". Two things gate a merge instead:
+#
+#   1. syntax-check — every script must be syntactically valid JavaScript.
+#      `node --check` parses each file without executing it.
+#
+#   2. test — the pure, engine-independent helper functions a handful of
+#      scripts export (see tests/opal-stub.js for why that require() works
+#      at all) get real assertions via Node's built-in test runner. This is
+#      deliberately partial: render/tick logic that only makes sense inside
+#      a live Opal client is out of scope for this suite (see CLAUDE.md).
 name: ci
 
 on:
@@ -44,3 +49,15 @@ jobs:
           for f in README.md LICENSE CONTRIBUTING.md CODE_OF_CONDUCT.md CHANGELOG.md SECURITY.md CLAUDE.md llms.txt; do
             test -f "$f" || { echo "missing required file: $f"; exit 1; }
           done
+
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Run the pure-logic test suite
+        run: node --test tests/*.test.js

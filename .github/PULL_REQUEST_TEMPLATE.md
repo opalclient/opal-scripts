@@ -23,6 +23,7 @@ approach.
 - [ ] `mc.player` / `mc.world` are null-guarded before use
 - [ ] The script has a realistic settings block (`addBool`/`addNumber`/`addMode`/`addGroup`) where it makes sense
 - [ ] `node --check path/to/Script.js` passes locally
+- [ ] `node --test tests/*.test.js` passes locally (if a pure helper was added/changed)
 - [ ] The README's table of contents is updated if a script was added, renamed, or removed
 - [ ] `CHANGELOG.md` updated under `[Unreleased]`
 - [ ] No machine paths, real secrets/account IDs, or personal info in the diff
