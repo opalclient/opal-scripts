@@ -1,0 +1,11 @@
+# This repo ships plain, dependency-free .js scripts (no package.json). The
+# only ecosystem actually present is the GitHub Actions workflows themselves.
+version: 2
+updates:
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "monthly"
+    labels:
+      - "dependencies"
+      - "ci"

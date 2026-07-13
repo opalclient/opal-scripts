@@ -1,0 +1,46 @@
+# House CI gate. Runs on push to main and on PRs.
+#
+# This repo has no package.json and no bundler — every example is a
+# standalone .js file loaded directly by Opal's GraalVM scripting engine, so
+# there is nothing to "build". The gate that actually matters is: every
+# script must be syntactically valid JavaScript. `node --check` parses each
+# file without executing it, which is exactly the right level of validation
+# for scripts whose globals (`registerScript`, `renderer`, `mc`, ...) only
+# exist inside the running Opal client and can't be mocked cheaply in CI.
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  syntax-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Check every example parses as valid JavaScript
+        run: |
+          set -euo pipefail
+          status=0
+          while IFS= read -r -d '' file; do
+            echo "checking $file"
+            node --check "$file" || status=1
+          done < <(find core character world ui combo -name '*.js' -print0)
+          exit $status
+
+      - name: Verify governance files are present
+        run: |
+          set -euo pipefail
+          for f in README.md LICENSE CONTRIBUTING.md CODE_OF_CONDUCT.md CHANGELOG.md SECURITY.md CLAUDE.md llms.txt; do
+            test -f "$f" || { echo "missing required file: $f"; exit 1; }
+          done

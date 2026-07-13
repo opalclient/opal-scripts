@@ -1,0 +1,19 @@
+# Secrets — never commit. Commit .env.example with placeholders instead.
+.env
+.env.*
+!.env.example
+*.local
+*.pem
+*.key
+
+# Per-repo Claude Code overrides.
+.claude/*.local.md
+
+# Dependencies (only relevant if a package.json / lint config is added later)
+node_modules/
+.pnpm-store/
+
+# OS / editor cruft
+.DS_Store
+Thumbs.db
+*.log
