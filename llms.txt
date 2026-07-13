@@ -1,0 +1,50 @@
+# opal-scripts
+
+> A curated gallery of example scripts for Opal's GraalVM JavaScript
+> scripting engine — real, runnable, well-commented `.js` files organized by
+> which proxy API they demonstrate.
+
+Use raw/permalink URLs (`https://raw.githubusercontent.com/opalclient/opal-scripts/main/<path>`)
+so a fetcher gets file content, not a rendered page.
+
+## Docs
+
+- [README](https://raw.githubusercontent.com/opalclient/opal-scripts/main/README.md): Overview, install instructions, categorized script index.
+- [CLAUDE.md](https://raw.githubusercontent.com/opalclient/opal-scripts/main/CLAUDE.md): AI guide — mental model, patterns, pitfalls.
+- [CONTRIBUTING.md](https://raw.githubusercontent.com/opalclient/opal-scripts/main/CONTRIBUTING.md): How to add a script, PR workflow, commit policy.
+- [SECURITY.md](https://raw.githubusercontent.com/opalclient/opal-scripts/main/SECURITY.md): Vulnerability reporting.
+- [CHANGELOG.md](https://raw.githubusercontent.com/opalclient/opal-scripts/main/CHANGELOG.md): Released and unreleased changes.
+
+## Examples — core/ (client, notification, overlay, modules proxies)
+
+- [MilestoneToasts.js](https://raw.githubusercontent.com/opalclient/opal-scripts/main/core/MilestoneToasts.js): Edge-triggered toast notifications for fall survival, low/full health, and sprint streaks.
+- [SessionIsland.js](https://raw.githubusercontent.com/opalclient/opal-scripts/main/core/SessionIsland.js): Dynamic Island showing session playtime and live enabled-module count.
+- [ModuleGuard.js](https://raw.githubusercontent.com/opalclient/opal-scripts/main/core/ModuleGuard.js): Configurable "disable Guard module while Watch module is active" pattern with auto-restore.
+
+## Examples — character/ (player, movement, rotation, inventory proxies)
+
+- [AutoToolSwitcher.js](https://raw.githubusercontent.com/opalclient/opal-scripts/main/character/AutoToolSwitcher.js): Best-tool hotbar switching using a facing heuristic (documents why a real raycast isn't reachable from script-land).
+- [SprintSpeedHud.js](https://raw.githubusercontent.com/opalclient/opal-scripts/main/character/SprintSpeedHud.js): Corner HUD with live speed number, sprint dot, and a fixed-timestep sparkline.
+- [LookAssist.js](https://raw.githubusercontent.com/opalclient/opal-scripts/main/character/LookAssist.js): Smooth-look at the nearest living entity in FOV, composing the rotation anti-detection helpers.
+- [FallWarning.js](https://raw.githubusercontent.com/opalclient/opal-scripts/main/character/FallWarning.js): Pre-landing fall-damage warning with an approximate damage estimate and screen-edge flash.
+
+## Examples — world/ (world, esp proxies)
+
+- [NameTagEsp.js](https://raw.githubusercontent.com/opalclient/opal-scripts/main/world/NameTagEsp.js): Floating nameplate-pill ESP tags that fade by distance.
+- [DayCycleClock.js](https://raw.githubusercontent.com/opalclient/opal-scripts/main/world/DayCycleClock.js): Dynamic Island clock converting world.getTimeOfDay() ticks into a real 24h/12h time with a day/night gradient bar.
+
+## Examples — ui/ (renderer, palette proxies)
+
+- [HudPanelShowcase.js](https://raw.githubusercontent.com/opalclient/opal-scripts/main/ui/HudPanelShowcase.js): Pure renderer showcase — gradients, Path API, composite glow/shadow/blur effects, color helpers.
+- [ReactionTester.js](https://raw.githubusercontent.com/opalclient/opal-scripts/main/ui/ReactionTester.js): Flagship palette-view mini-app #1 — a reflex-timing reaction game.
+- [StatsDashboard.js](https://raw.githubusercontent.com/opalclient/opal-scripts/main/ui/StatsDashboard.js): Flagship palette-view mini-app #2 — a live, read-only stat-tracking dashboard.
+
+## Examples — combo/ (several proxies wired together)
+
+- [CombatHud.js](https://raw.githubusercontent.com/opalclient/opal-scripts/main/combo/CombatHud.js): esp + player + world + rotation combat-awareness HUD; explains the missing target-health API.
+- [GroundScanner.js](https://raw.githubusercontent.com/opalclient/opal-scripts/main/combo/GroundScanner.js): world + player + renderer + notification vertical ground-gap scanner using BlockPos arithmetic.
+
+## Optional
+
+- [Issues](https://github.com/opalclient/opal-scripts/issues)
+- [Discussions](https://github.com/opalclient/opal-scripts/discussions)
