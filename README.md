@@ -87,6 +87,7 @@ it uses Node's built-in test runner.
 | [SprintSpeedHud.js](character/SprintSpeedHud.js) | A corner HUD panel with a live speed number, sprint indicator, and a fixed-timestep sparkline history. |
 | [LookAssist.js](character/LookAssist.js) | Smooth-looks at the nearest living entity in an FOV cone, composing the rotation proxy's anti-detection helpers (`patchConstantRotation`) on top of `setSmooth`. |
 | [FallWarning.js](character/FallWarning.js) | Warns before a fall lands if the (deliberately approximate) estimated damage looks dangerous, with a pulsing screen-edge vignette. |
+| [PacketNoFall.js](character/PacketNoFall.js) | Rewrites the outbound movement packet's `onGround` flag to `true` while genuinely falling, demonstrating the packet scripting API's mutation model, with a `timer`-rate-limited debug log. |
 
 ### world/: world, esp
 

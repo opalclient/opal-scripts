@@ -29,6 +29,16 @@
 //    const { toolKeywordFor } = require("../character/AutoToolSwitcher.js");
 // =============================================================================
 
+/**
+ * Every fake `module` handle created via `makeFakeModule()`, in registration
+ * order. Lets the exported `getRegisteredHandler()` hand a test the exact
+ * function a script passed to `module.on(...)`, so a test can drive an event
+ * handler directly (see tests/PacketNoFall.test.js) instead of only covering
+ * pure, engine-independent helpers. Declared outside the install guard so it
+ * stays reachable even though the guard body below only runs once per process.
+ */
+const registeredFakeModules = [];
+
 if (!globalThis.__opalStubInstalled) {
     globalThis.__opalStubInstalled = true;
 
@@ -39,7 +49,7 @@ if (!globalThis.__opalStubInstalled) {
     function makeFakeModule() {
         const settings = new Map();
         const handlers = new Map();
-        return {
+        const fakeModule = {
             addBool: (name, def) => settings.set(name, def),
             addNumber: (name, def) => settings.set(name, def),
             addMode: (name, options) => settings.set(name, options[0]),
@@ -51,7 +61,11 @@ if (!globalThis.__opalStubInstalled) {
             getMode: (name) => String(settings.get(name) || ""),
             isModeEqual: (name, option) => String(settings.get(name) || "").toLowerCase() === String(option).toLowerCase(),
             on: (event, handler) => handlers.set(event, handler),
+            /** Test-only escape hatch (not part of the real OpalModule API) — see `getRegisteredHandler`. */
+            __handlers: handlers,
         };
+        registeredFakeModules.push(fakeModule);
+        return fakeModule;
     }
 
     globalThis.registerScript = (_config) => ({
@@ -150,6 +164,8 @@ if (!globalThis.__opalStubInstalled) {
         getModule: noopReturning(null),
         isModuleEnabled: noopReturning(false),
         setModuleEnabled: noop,
+        sendChat: noop,
+        runCommand: noop,
         getScaledWidth: noopReturning(1920),
         getScaledHeight: noopReturning(1080),
         getScaleFactor: noopReturning(1),
@@ -322,6 +338,32 @@ if (!globalThis.__opalStubInstalled) {
         getInteractionManager: noopReturning(null),
     };
 
+    /** A real (Date.now()-backed) stopwatch, so `passed`/`passedAndReset` are
+     * actually meaningful in a test rather than hardcoded stubs. */
+    function makeFakeStopwatch() {
+        let last = Date.now();
+        return {
+            reset: () => {
+                last = Date.now();
+            },
+            elapsed: () => Date.now() - last,
+            passed: (ms) => Date.now() - last >= ms,
+            passedAndReset: (ms) => {
+                const now = Date.now();
+                if (now - last >= ms) {
+                    last = now;
+                    return true;
+                }
+                return false;
+            },
+        };
+    }
+
+    globalThis.timer = {
+        create: makeFakeStopwatch,
+        now: () => Date.now(),
+    };
+
     globalThis.MAIN_HAND = "MAIN_HAND";
     globalThis.OFF_HAND = "OFF_HAND";
 
@@ -379,4 +421,216 @@ if (!globalThis.__opalStubInstalled) {
     };
 }
 
-module.exports = {};
+// =============================================================================
+//  Test-only helpers (exported, not installed on globalThis)
+//
+//  These are not part of the real Opal engine — they exist so a test can (a)
+//  reach the handler a script registered via `module.on(...)` and (b) build a
+//  fake event payload matching the shapes in opal-globals.d.ts, so it can
+//  drive that handler directly. See tests/PacketNoFall.test.js.
+// =============================================================================
+
+/**
+ * Returns the handler a script registered for `eventName` via
+ * `module.on(eventName, handler)`. Defaults to the most recently registered
+ * module (the common one-module-per-script case); pass `moduleIndex` for a
+ * script that registers more than one module.
+ *
+ * @param {string} eventName e.g. "preMovementPacket".
+ * @param {number} [moduleIndex] Index into registration order; defaults to the last-registered module.
+ * @returns {Function|undefined} The registered handler, or undefined if none was registered.
+ */
+function getRegisteredHandler(eventName, moduleIndex = registeredFakeModules.length - 1) {
+    const fakeModule = registeredFakeModules[moduleIndex];
+    return fakeModule ? fakeModule.__handlers.get(eventName) : undefined;
+}
+
+/**
+ * Builds a fake `preMovementPacket` event payload (see `PreMovementPacketEvent`
+ * in opal-globals.d.ts). Every setter records its calls in `.calls.<method>`
+ * so a test can assert exactly what a handler mutated.
+ *
+ * @param {object} [overrides] Initial getter values (x/y/z/yaw/pitch/onGround/sprinting/horizontalCollision/forceInput/cancelled).
+ */
+function makeFakePreMovementPacketEvent(overrides = {}) {
+    const state = Object.assign(
+        {
+            x: 0,
+            y: 64,
+            z: 0,
+            yaw: 0,
+            pitch: 0,
+            onGround: false,
+            sprinting: false,
+            horizontalCollision: false,
+            forceInput: false,
+            cancelled: false,
+        },
+        overrides,
+    );
+    const calls = {
+        setX: [],
+        setY: [],
+        setZ: [],
+        setYaw: [],
+        setPitch: [],
+        setOnGround: [],
+        setSprinting: [],
+        setHorizontalCollision: [],
+        setForceInput: [],
+        cancel: 0,
+    };
+    return {
+        getX: () => state.x,
+        getY: () => state.y,
+        getZ: () => state.z,
+        setX: (v) => {
+            calls.setX.push(v);
+            state.x = v;
+        },
+        setY: (v) => {
+            calls.setY.push(v);
+            state.y = v;
+        },
+        setZ: (v) => {
+            calls.setZ.push(v);
+            state.z = v;
+        },
+        getYaw: () => state.yaw,
+        getPitch: () => state.pitch,
+        setYaw: (v) => {
+            calls.setYaw.push(v);
+            state.yaw = v;
+        },
+        setPitch: (v) => {
+            calls.setPitch.push(v);
+            state.pitch = v;
+        },
+        isOnGround: () => state.onGround,
+        setOnGround: (v) => {
+            calls.setOnGround.push(v);
+            state.onGround = v;
+        },
+        isSprinting: () => state.sprinting,
+        setSprinting: (v) => {
+            calls.setSprinting.push(v);
+            state.sprinting = v;
+        },
+        isHorizontalCollision: () => state.horizontalCollision,
+        setHorizontalCollision: (v) => {
+            calls.setHorizontalCollision.push(v);
+            state.horizontalCollision = v;
+        },
+        isForceInput: () => state.forceInput,
+        setForceInput: (v) => {
+            calls.setForceInput.push(v);
+            state.forceInput = v;
+        },
+        isCancelled: () => state.cancelled,
+        cancel: () => {
+            calls.cancel += 1;
+            state.cancelled = true;
+        },
+        /** Test-only: every setter/cancel call the handler under test made. */
+        calls,
+    };
+}
+
+/** Builds a fake read-only `postMovementPacket` event payload. */
+function makeFakePostMovementPacketEvent(overrides = {}) {
+    const state = Object.assign({ x: 0, y: 64, z: 0, yaw: 0, pitch: 0, onGround: true, sprinting: false }, overrides);
+    return {
+        getX: () => state.x,
+        getY: () => state.y,
+        getZ: () => state.z,
+        getYaw: () => state.yaw,
+        getPitch: () => state.pitch,
+        isOnGround: () => state.onGround,
+        isSprinting: () => state.sprinting,
+    };
+}
+
+/**
+ * Builds a fake payload for the shared `sendPacket`/`receivePacket`/
+ * `instantaneousSendPacket`/`instantaneousReceivePacket` shape (`PacketEvent`
+ * in opal-globals.d.ts).
+ *
+ * @param {string} [type] Simple packet class name, e.g. "ServerboundMovePlayerPacket".
+ */
+function makeFakePacketEvent(type = "ServerboundMovePlayerPacket", overrides = {}) {
+    const state = Object.assign({ cancelled: false }, overrides);
+    const calls = { cancel: 0 };
+    return {
+        getType: () => type,
+        isCancelled: () => state.cancelled,
+        cancel: () => {
+            calls.cancel += 1;
+            state.cancelled = true;
+        },
+        calls,
+    };
+}
+
+/** Builds a fake `chatReceived` event payload. */
+function makeFakeChatReceivedEvent(overrides = {}) {
+    const state = Object.assign({ message: "", overlay: false, cancelled: false }, overrides);
+    const calls = { setOverlay: [], cancel: 0 };
+    return {
+        getMessage: () => state.message,
+        isOverlay: () => state.overlay,
+        setOverlay: (v) => {
+            calls.setOverlay.push(v);
+            state.overlay = v;
+        },
+        isCancelled: () => state.cancelled,
+        cancel: () => {
+            calls.cancel += 1;
+            state.cancelled = true;
+        },
+        calls,
+    };
+}
+
+/** Builds a fake `attack` event payload. */
+function makeFakeAttackEvent(overrides = {}) {
+    const state = Object.assign(
+        { targetName: "", targetId: 0, targetHealth: -1, targetMaxHealth: -1, targetDistance: -1 },
+        overrides,
+    );
+    return {
+        getTargetName: () => state.targetName,
+        getTargetId: () => state.targetId,
+        getTargetHealth: () => state.targetHealth,
+        getTargetMaxHealth: () => state.targetMaxHealth,
+        getTargetDistance: () => state.targetDistance,
+    };
+}
+
+/** Builds a fake `jump` event payload. */
+function makeFakeJumpEvent(overrides = {}) {
+    const state = Object.assign({ sprinting: false, cancelled: false }, overrides);
+    const calls = { setSprinting: [], cancel: 0 };
+    return {
+        isSprinting: () => state.sprinting,
+        setSprinting: (v) => {
+            calls.setSprinting.push(v);
+            state.sprinting = v;
+        },
+        isCancelled: () => state.cancelled,
+        cancel: () => {
+            calls.cancel += 1;
+            state.cancelled = true;
+        },
+        calls,
+    };
+}
+
+module.exports = {
+    getRegisteredHandler,
+    makeFakePreMovementPacketEvent,
+    makeFakePostMovementPacketEvent,
+    makeFakePacketEvent,
+    makeFakeChatReceivedEvent,
+    makeFakeAttackEvent,
+    makeFakeJumpEvent,
+};

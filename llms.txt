@@ -27,6 +27,7 @@ so a fetcher gets file content, not a rendered page.
 - [SprintSpeedHud.js](https://raw.githubusercontent.com/opalclient/opal-scripts/main/character/SprintSpeedHud.js): Corner HUD with live speed number, sprint dot, and a fixed-timestep sparkline.
 - [LookAssist.js](https://raw.githubusercontent.com/opalclient/opal-scripts/main/character/LookAssist.js): Smooth-look at the nearest living entity in FOV, composing the rotation anti-detection helpers.
 - [FallWarning.js](https://raw.githubusercontent.com/opalclient/opal-scripts/main/character/FallWarning.js): Pre-landing fall-damage warning with an approximate damage estimate and screen-edge flash.
+- [PacketNoFall.js](https://raw.githubusercontent.com/opalclient/opal-scripts/main/character/PacketNoFall.js): Rewrites the movement packet's onGround flag while falling (packet scripting API), rate-limited with `timer`.
 
 ## Examples — world/ (world, esp proxies)
 
