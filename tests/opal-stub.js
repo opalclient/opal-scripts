@@ -625,6 +625,83 @@ function makeFakeJumpEvent(overrides = {}) {
     };
 }
 
+/** Builds a fake `preMove` event payload (see `PreMoveEvent` in opal-globals.d.ts). */
+function makeFakePreMoveEvent(overrides = {}) {
+    const state = Object.assign({ speed: 0, inputX: 0, inputY: 0, inputZ: 0, cancelled: false }, overrides);
+    const calls = { cancel: 0 };
+    return {
+        getSpeed: () => state.speed,
+        getInputX: () => state.inputX,
+        getInputY: () => state.inputY,
+        getInputZ: () => state.inputZ,
+        isCancelled: () => state.cancelled,
+        cancel: () => {
+            calls.cancel += 1;
+            state.cancelled = true;
+        },
+        calls,
+    };
+}
+
+/** Builds a fake read-only `postMove` event payload (see `PostMoveEvent` in opal-globals.d.ts). */
+function makeFakePostMoveEvent(overrides = {}) {
+    const state = Object.assign({ speed: 0, inputX: 0, inputY: 0, inputZ: 0 }, overrides);
+    return {
+        getSpeed: () => state.speed,
+        getInputX: () => state.inputX,
+        getInputY: () => state.inputY,
+        getInputZ: () => state.inputZ,
+    };
+}
+
+/** Builds a fake `serverConnect` event payload (see `ServerConnectEvent` in opal-globals.d.ts). */
+function makeFakeServerConnectEvent(overrides = {}) {
+    const state = Object.assign({ host: "localhost", port: 25565, cancelled: false }, overrides);
+    const calls = { cancel: 0 };
+    return {
+        getHost: () => state.host,
+        getPort: () => state.port,
+        getAddress: () => `${state.host}:${state.port}`,
+        isCancelled: () => state.cancelled,
+        cancel: () => {
+            calls.cancel += 1;
+            state.cancelled = true;
+        },
+        calls,
+    };
+}
+
+/** Builds a fake `blockUpdate` event payload (see `BlockUpdateEvent` in opal-globals.d.ts). */
+function makeFakeBlockUpdateEvent(overrides = {}) {
+    const state = Object.assign({ x: 0, y: 64, z: 0, oldBlock: "Air", newBlock: "Air" }, overrides);
+    return {
+        getX: () => state.x,
+        getY: () => state.y,
+        getZ: () => state.z,
+        getOldBlock: () => state.oldBlock,
+        getNewBlock: () => state.newBlock,
+    };
+}
+
+/**
+ * Builds a fake `keyPress`/`mousePress` event payload (see `KeyPressEvent`/
+ * `MousePressEvent` in opal-globals.d.ts, both sharing the `InteractionCodeEvent` shape).
+ *
+ * @param {number} [code] GLFW key or mouse-button code.
+ */
+function makeFakeInputEvent(code = 0) {
+    return {
+        getCode: () => code,
+    };
+}
+
+/** Builds a fake `swing` event payload (see `SwingEvent` in opal-globals.d.ts). */
+function makeFakeSwingEvent(mainHand = true) {
+    return {
+        isMainHand: () => mainHand,
+    };
+}
+
 module.exports = {
     getRegisteredHandler,
     makeFakePreMovementPacketEvent,
@@ -633,4 +710,10 @@ module.exports = {
     makeFakeChatReceivedEvent,
     makeFakeAttackEvent,
     makeFakeJumpEvent,
+    makeFakePreMoveEvent,
+    makeFakePostMoveEvent,
+    makeFakeServerConnectEvent,
+    makeFakeBlockUpdateEvent,
+    makeFakeInputEvent,
+    makeFakeSwingEvent,
 };
