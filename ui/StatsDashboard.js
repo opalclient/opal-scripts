@@ -17,13 +17,13 @@
 //    • player    — getHealth/getMaxHealth, getBlockPosition.
 //    • movement  — getBlocksPerSecond.
 //    • world     — getDimension.
-//    • modules   — listEnabled().length.
+//    • modules   — listEnabled().size() (a ScriptList, not a JS array).
 //    • renderer  — every draw call in the render callback.
 //
 //  THE GOTCHA THIS TEACHES
 //  ------------------------
 //  A palette view can be opened from the main menu or a loading screen, where
-//  `mc.player`/`mc.world` are null — unlike a module's `renderScreen`, there
+//  `mc.getPlayer()`/`mc.getWorld()` are null — unlike a module's `renderScreen`, there
 //  is no "only enabled while in a world" guarantee here. Every read below is
 //  guarded, and the tiles render em-dashes instead of throwing when there is
 //  no player/world to read from, so opening the view never errors out.
@@ -88,7 +88,7 @@ function createDashboard(historySeconds) {
             state.fpsSamples.push(client.getFPS());
             while (state.fpsSamples.length > cap) state.fpsSamples.shift();
 
-            const speed = mc.player !== null ? movement.getBlocksPerSecond() : 0;
+            const speed = mc.getPlayer() !== null ? movement.getBlocksPerSecond() : 0;
             state.speedSamples.push(speed);
             while (state.speedSamples.length > cap) state.speedSamples.shift();
         }
@@ -202,7 +202,7 @@ script.registerModule(
         function renderDashboard(x, y, w, h, state) {
             renderer.roundedRect(x, y, w, h, 10, C.bg);
 
-            const inWorld = mc.player !== null && mc.world !== null;
+            const inWorld = mc.getPlayer() !== null && mc.getWorld() !== null;
             const pad = 12;
             const titleH = 20;
 
@@ -220,7 +220,7 @@ script.registerModule(
             const dim = inWorld ? world.getDimension() : null;
             const fps = client.getFPS();
             const speed = inWorld ? movement.getBlocksPerSecond() : 0;
-            const enabledCount = modules.listEnabled().length;
+            const enabledCount = modules.listEnabled().size();
 
             const tiles = [
                 {

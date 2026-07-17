@@ -33,7 +33,7 @@ script.registerModule({ name: "MyModule", description: "..." }, (module) => {
 
     // 3. Logic — 20/sec, before vanilla tick logic runs.
     module.on("preGameTick", (event) => {
-        if (mc.player === null || mc.world === null) return; // ALWAYS first line
+        if (mc.getPlayer() === null || mc.getWorld() === null) return; // ALWAYS first line
         // read module.getBool/getNumber/getMode(...) live, every tick
     });
 
@@ -52,10 +52,15 @@ does at least one of those three things end to end.
 
 ## The patterns that matter
 
-- **Null-guard first, every time.** `mc.player`/`mc.world` are `null` in
-  menus and loading screens. The first line of every `preGameTick` and most
+- **Null-guard first, every time.** There is no player or world in menus and
+  loading screens. The first line of every `preGameTick` and most
   `renderScreen` handlers in this repo is
-  `if (mc.player === null || mc.world === null) return;`.
+  `if (mc.getPlayer() === null || mc.getWorld() === null) return;`.
+  **It is `mc.getPlayer()`, never `mc.player`.** The sandbox does no
+  bean-property mapping, so the property form reads `undefined` — and
+  `undefined === null` is `false`, which means a `mc.player === null` guard
+  silently never fires. (Exported *fields* do read as properties, which is
+  why `mc.interactionManager` is spelled without a call.)
 - **Settings before handlers, always.** All `addBool`/`addNumber`/`addMode`
   calls happen synchronously at the top of the `registerModule` callback,
   before any `module.on(...)`. `addGroup` comes after the settings it groups.
@@ -67,15 +72,16 @@ does at least one of those three things end to end.
   every file in this repo builds colors through `renderer.color(...)` (or
   `renderer.withAlpha`/`applyOpacity`/`interpolate`/`darker`/`brighter`) for
   exactly that reason.
-- **`Vec3d`/`Vec3i` are opaque — pass them, never read them.** A raw vector
-  returned by `player.getEyePosition()`, `player.getVelocity()`, or
-  `rotation.getRotationVector(...)` cannot have its `.getX()/.getY()/.getZ()`
-  called from script-land (Fabric intermediary mappings rename them at
-  runtime). Pass it straight into another proxy method
-  (`rotation.getRotationFromPosition(pos)`, `esp.projectVec(pos, dt)`) or use
-  `player.getBlockPosition()` instead, which returns a readable `BlockPos`.
-  `character/AutoToolSwitcher.js` and `combo/GroundScanner.js` both exist
-  specifically to demonstrate the block-arithmetic workaround this forces.
+- **Vectors are `ScriptVec3` and are readable.** `player.getEyePosition()`,
+  `player.getVelocity()`, and `rotation.getRotationVector(...)` hand back a
+  `ScriptVec3` with real `getX()`/`getY()`/`getZ()`, plus `length()`,
+  `distanceTo(v)`, `add(v)` and `subtract(v)`. You can still pass one straight
+  into another proxy method (`rotation.getRotationFromPosition(pos)`,
+  `esp.projectVec(pos, dt)`). Read components with the getters — **never**
+  `.x`/`.y`/`.z`, which read `undefined`. `Vec3i` no longer exists; `BlockPos`
+  is the integer-valued global. `character/AutoToolSwitcher.js` and
+  `combo/GroundScanner.js` predate the wrapper and still show the coarser
+  block-arithmetic substitute; their headers explain what changed.
 - **Edge-trigger, don't level-trigger, a tick-rate poll.** A condition
   checked 20 times a second will fire 20 toasts a second unless you track
   "have I already acted on this?" and only act on the transition. See
@@ -94,15 +100,25 @@ does at least one of those three things end to end.
 ## Pitfalls to avoid
 
 - Don't invent an API that isn't documented. If you're tempted to write
-  `entity.getHealth()`, `world.getTargetedBlock()`, or a signed bearing/angle
-  to another entity — none of these exist in the scripting API. Say so in the
-  script's header comment and design around the gap (see `combo/CombatHud.js`
-  and `character/AutoToolSwitcher.js` for the pattern: name the missing API,
-  explain the workaround, ship something real instead of something that
-  silently no-ops or throws at runtime).
-- Don't call `setCancelled()` on a non-cancellable event (`attack`, `swing`,
-  `postMove`, any render event) — it throws. Check the cancellable-events
-  table in Opal's `events.mdx` before wiring a new event handler.
+  `world.getTargetedBlock()` or a signed bearing/angle to another entity —
+  neither exists in the scripting API. Say so in the script's header comment
+  and design around the gap (see `character/AutoToolSwitcher.js` for the
+  pattern: name the missing API, explain the workaround, ship something real
+  instead of something that silently no-ops or throws at runtime). Check
+  against the proxy's `@HostAccess.Export` surface rather than guessing — a
+  member without that annotation does not exist for scripts.
+- Don't assume a read is missing because it once was. `entity.getHealth()` /
+  `getMaxHealth()` / `getAbsorption()` / `getArmor()` read any living entity
+  now, answering the `-1` sentinel ("absent or not applicable") on a
+  non-living one — `combo/CombatHud.js` gates on that sentinel rather than a
+  type check.
+- Don't call `cancel()` on a non-cancellable event (`attack`, `swing`,
+  `postMove`, any render event) — it throws. Cancellation is `cancel()` /
+  `isCancelled()`; the old `setCancelled()` no longer exists. Check the
+  cancellable-events table in Opal's `events.mdx` before wiring a new handler.
+- Don't give a render event handler a parameter. `renderScreen`, `renderWorld`
+  and `renderBloom` pass a memberless record — every accessor on it throws.
+  Take no arguments and use `client.getTickDelta()`.
 - Don't add a setting after the `addGroup` call that references it — a group
   member must already exist when `addGroup` runs, or it's silently dropped.
 - Don't hardcode a personal filesystem path, a private repo URL, or any

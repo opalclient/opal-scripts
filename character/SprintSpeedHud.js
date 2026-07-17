@@ -85,7 +85,7 @@ script.registerModule(
         });
 
         module.on("preGameTick", () => {
-            if (mc.player === null || mc.world === null) return;
+            if (mc.getPlayer() === null || mc.getWorld() === null) return;
 
             samples.push(movement.getBlocksPerSecond());
             const maxSamples = Math.round(module.getNumber("History Seconds") * 20);
@@ -93,7 +93,7 @@ script.registerModule(
         });
 
         module.on("renderScreen", () => {
-            if (mc.player === null || mc.world === null) return;
+            if (mc.getPlayer() === null || mc.getWorld() === null) return;
 
             const showGraph = module.getBool("Show Graph");
             const panelH = PAD * 2 + 12 + 14 + (showGraph ? GRAPH_H + 6 : 0);
