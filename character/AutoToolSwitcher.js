@@ -18,24 +18,28 @@
 //  THE GOTCHA THIS TEACHES — there is no `getTargetedBlock()`
 //  ------------------------------------------------------------
 //  You might expect a `world.getTargetedBlock()` or a crosshair raycast
-//  helper. It doesn't exist, and it can't be built from script-land either:
-//  `player.getEyePosition()` and `rotation.getRotationVector(...)` both
-//  return a raw `Vec3d`, and per the Types reference, a `Vec3d`'s own
-//  `getX()/getY()/getZ()` are Fabric-intermediary-named at runtime — they
-//  are NOT callable from JavaScript. You can only pass a `Vec3d` around
-//  (e.g. into `rotation.getRotationFromPosition`), never read its components.
-//  So a real per-block DDA raycast marched along a direction vector is not
-//  reachable from script-land at all with the documented API.
+//  helper. There isn't one. You *can* build a real per-block DDA raycast
+//  yourself: `player.getEyePosition()` and `rotation.getRotationVector(pitch,
+//  yaw)` both hand back a `ScriptVec3`, whose `getX()/getY()/getZ()` are
+//  readable, so you can march a direction vector and probe each step with
+//  `world.isAir(new BlockPos(...))`.
 //
-//  This script works around that with a coarser but fully-readable
-//  substitute: it buckets `player.getYaw()` into one of 4 cardinal
-//  directions (the same idea `CoordinatesHud.js` uses for its compass
-//  readout, just narrowed from 8 buckets to 4) and combines that with
-//  `player.getPitch()` to guess "the block roughly where you're looking" —
-//  one step ahead of your feet, or straight down/up if you're looking
-//  steeply that way. It is a facing heuristic, not a raycast, and it will
-//  occasionally guess the wrong block on stairs/slabs or through a corner.
-//  That tradeoff — and exactly why it exists — is the point of this example.
+//  (This example predates that. It was written when those methods returned a
+//  raw Mojang `Vec3` — which, under the sandbox's `HostAccess.EXPLICIT`
+//  policy, exported nothing at all: you could pass one back into another
+//  proxy method but never read a component off it. The `ScriptVec3` wrapper
+//  is what changed.)
+//
+//  What this script does instead is the deliberately coarser substitute: it
+//  buckets `player.getYaw()` into one of 4 cardinal directions (the same idea
+//  `CoordinatesHud.js` uses for its compass readout, just narrowed from 8
+//  buckets to 4) and combines that with `player.getPitch()` to guess "the
+//  block roughly where you're looking" — one step ahead of your feet, or
+//  straight down/up if you're looking steeply that way. It stays a facing
+//  heuristic because a switch-my-tool module does not need sub-block
+//  precision, and the heuristic is ~15 lines against a raycast's ~60. It will
+//  occasionally guess wrong on stairs/slabs or through a corner. Reach for the
+//  raycast when you need the exact block; reach for this when you don't.
 //
 //  Settings:
 //    • Switch Mode      — Silent (server-side only) or Normal (visible switch).
@@ -68,8 +72,8 @@ const PITCH_UP_THRESHOLD = -50; // looking steeply up
 const PITCH_DOWN_THRESHOLD = 55; // looking steeply down
 
 /**
- * Guesses the block the player is roughly facing, using only readable
- * numeric getters (no raw Vec3d component reads — see the header comment).
+ * Guesses the block the player is roughly facing by bucketing yaw into a
+ * cardinal direction — a heuristic, not a raycast (see the header comment).
  *
  * @returns {BlockPos} The guessed target block position.
  */
@@ -138,7 +142,7 @@ script.registerModule(
         });
 
         module.on("preGameTick", () => {
-            if (mc.player === null || mc.world === null) return;
+            if (mc.getPlayer() === null || mc.getWorld() === null) return;
 
             // Never rip a weapon out of the player's hand mid-fight.
             if (module.getBool("Respect Combat") && player.isHoldingWeapon()) {

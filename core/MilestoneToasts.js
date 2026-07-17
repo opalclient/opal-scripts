@@ -111,7 +111,7 @@ script.registerModule(
         // ====================================================================
 
         module.on("preGameTick", () => {
-            if (mc.player === null || mc.world === null) return;
+            if (mc.getPlayer() === null || mc.getWorld() === null) return;
 
             checkFallMilestone();
             checkHealthMilestones();

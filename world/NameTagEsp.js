@@ -27,6 +27,17 @@
 //  configured range are skipped before the projection call even runs (no
 //  point projecting something you're not going to draw).
 //
+//  AND THE ONE IT LEARNED THE HARD WAY
+//  ------------------------------------
+//  Everything the scripting API hands back is a wrapper with getters, never a
+//  bare object with fields — the sandbox (GraalVM `HostAccess.EXPLICIT`) grants
+//  no property access to anything not explicitly exported. So it is
+//  `box.getX()`, not `box.x`; `entity.getName()` returns a plain String, not
+//  something you call `.getString()` on; `world.getLivingEntitiesInRange()`
+//  returns a `ScriptList` you walk with `size()`/`get(i)`, not an array. This
+//  script used to read `box.x` — which evaluated to `undefined`, made every
+//  coordinate NaN, and silently drew nothing at all.
+//
 //  Settings:
 //    • Range             — search radius in blocks.
 //    • Show Distance      — add a "12.3m" second line under the name.
@@ -70,7 +81,7 @@ script.registerModule(
         });
 
         module.on("renderScreen", () => {
-            if (mc.player === null || mc.world === null) return;
+            if (mc.getPlayer() === null || mc.getWorld() === null) return;
 
             const range = module.getNumber("Range");
             const showDistance = module.getBool("Show Distance");
@@ -91,7 +102,7 @@ script.registerModule(
 
                 const alpha = fadeByDistance ? clamp(1 - distance / range, 0.25, 1) : 1;
 
-                const name = entity.getName().getString();
+                const name = entity.getName();
                 const distanceText = distance.toFixed(1) + "m";
 
                 drawTag(box, name, showDistance ? distanceText : null, textSize, alpha, pillStyle);
@@ -101,7 +112,7 @@ script.registerModule(
         /**
          * Draws one nameplate centered above a projected entity box.
          *
-         * @param {object} box            {x, y, z=width, w=height} from esp.getEntityBox2D.
+         * @param {ScriptBox2D} box       Screen-space box from esp.getEntityBox2D.
          * @param {string} name           The entity's display name.
          * @param {string|null} distText  Pre-formatted distance string, or null to omit.
          * @param {number} textSize       Font size for the name line.
@@ -114,7 +125,7 @@ script.registerModule(
             const distW = distText !== null ? renderer.textWidth("productsans-medium", distText, distSize) : 0;
             const contentW = Math.max(nameW, distW);
 
-            const centerX = box.x + box.z / 2;
+            const centerX = box.getX() + box.getWidth() / 2;
             const rows = distText !== null ? 2 : 1;
             const rowGap = 2;
             const padX = 6;
@@ -122,7 +133,7 @@ script.registerModule(
             const tagH = rows * textSize * 0.85 + (rows - 1) * rowGap + padY * 2;
             const tagW = contentW + padX * 2;
             const tagX = centerX - tagW / 2;
-            const tagY = box.y - tagH - 4;
+            const tagY = box.getY() - tagH - 4;
 
             if (pillStyle) {
                 renderer.roundedRect(tagX, tagY, tagW, tagH, 3, renderer.applyOpacity(PILL_BG, alpha));

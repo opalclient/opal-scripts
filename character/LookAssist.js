@@ -11,14 +11,10 @@
 //
 //  A NOTE ON "NEAREST PLAYER"
 //  --------------------------
-//  The task this script demos is usually described as "look at the nearest
-//  player", but the scripting API's `world.getLivingEntitiesInRange(radius)`
-//  returns every living entity — mobs and players alike — and there is no
-//  documented `isPlayer()` / entity-type check exposed to scripts. Rather
-//  than fabricate a method that doesn't exist, this script honestly targets
-//  the nearest living entity of any kind. On a server where the only nearby
-//  living entities in practice ARE other players (anarchy servers, most
-//  PvP arenas), that is exactly "nearest player" in effect.
+//  `world.getLivingEntitiesInRange(radius)` returns every living entity — mobs
+//  and players alike. `entity.isPlayer()` narrows that, so the "Players Only"
+//  setting below is a real filter rather than the honest-but-vague "nearest
+//  living entity of any kind" this example used to settle for.
 //
 //  WHICH GLOBALS / EVENTS
 //  -----------------------
@@ -43,6 +39,7 @@
 //    • FOV              — half-angle of the targeting cone in degrees.
 //    • Turn Speed       — max degrees of rotation per tick.
 //    • Require FOV Gate — only lock onto entities already inside the FOV cone.
+//    • Players Only     — ignore mobs; lock onto other players only.
 //    • Show Lock Indicator — draw the "Locked: name (dist)" HUD line.
 //
 //  Author: Opal  ·  An example of the rotation + world scripting APIs.
@@ -67,6 +64,7 @@ script.registerModule(
         module.addNumber("FOV", 90, 10, 180, 5);
         module.addNumber("Turn Speed", 12, 1, 60, 1);
         module.addBool("Require FOV Gate", true);
+        module.addBool("Players Only", false);
         module.addBool("Show Lock Indicator", true);
 
         // ---- State ------------------------------------------------------------
@@ -91,7 +89,7 @@ script.registerModule(
         });
 
         module.on("preGameTick", () => {
-            if (mc.player === null || mc.world === null) {
+            if (mc.getPlayer() === null || mc.getWorld() === null) {
                 lockedName = null;
                 return;
             }
@@ -99,6 +97,7 @@ script.registerModule(
             const range = module.getNumber("Range");
             const fov = module.getNumber("FOV");
             const requireFov = module.getBool("Require FOV Gate");
+            const playersOnly = module.getBool("Players Only");
 
             const candidates = world.getLivingEntitiesInRange(range);
             if (candidates.isEmpty()) {
@@ -110,6 +109,7 @@ script.registerModule(
             let bestDistance = Infinity;
             for (let i = 0; i < candidates.size(); i++) {
                 const entity = candidates.get(i);
+                if (playersOnly && !entity.isPlayer()) continue;
                 if (requireFov && !rotation.isEntityInFOV(entity, fov)) continue;
 
                 const distance = player.getDistanceToEntity(entity);
@@ -142,7 +142,7 @@ script.registerModule(
             rotation.setSmooth(target.getYaw(), target.getPitch(), module.getNumber("Turn Speed"));
             prevRotation = target;
 
-            lockedName = best.getName().getString();
+            lockedName = best.getName();
             lockedDistance = bestDistance;
         });
 

@@ -69,6 +69,29 @@ opal-scripts/
 Run the test suite with `node --test tests/*.test.js`. No install step needed;
 it uses Node's built-in test runner.
 
+### What the test suite cannot tell you
+
+`tests/opal-stub.js` fakes the scripting globals so a script can be loaded
+under plain Node. **It cannot prove a sandbox denial** — it involves no host
+object and no GraalVM context. A member the stub answers may still be
+completely unreachable in-game. The real gate for API *shape* is
+`ScriptRepositorySandboxTest` in the `opal` repo, which evals through a live
+Graal context against real host objects under the actual `HostAccess.EXPLICIT`
+policy.
+
+This blind spot shipped six bugs. The stub used to fake host objects with plain
+JS object literals, which answer any call — so the suite encoded the API these
+scripts *assumed* rather than the one the sandbox *serves*, and stayed green
+while `mc.player` (27 call sites), `box.x` (NaN coordinates in both ESP
+scripts), `entity.getName().getString()`, `.length` on a returned list, and two
+deleted methods were all silently broken in-game.
+
+The stub now models the real contract — collections are `ScriptList`-shaped,
+there are no bean properties, and reading an unexported member throws — but
+that only narrows the gap. It does not close it. When you add a script, check
+the method you are calling against the Java proxy in `opal`, not against the
+stub or the IDE typings.
+
 ## Examples
 
 ### core/: client, notifications, overlay, modules
@@ -83,9 +106,10 @@ it uses Node's built-in test runner.
 
 | Script | What it shows |
 |---|---|
-| [AutoToolSwitcher.js](character/AutoToolSwitcher.js) | Silently switches to the best hotbar tool for the block you're facing, and documents exactly why a real crosshair raycast isn't reachable from script-land. |
+| [AutoToolSwitcher.js](character/AutoToolSwitcher.js) | Silently switches to the best hotbar tool for the block you're facing, using a cardinal-facing heuristic instead of a raycast, and documents that tradeoff. |
+| [PotionAlert.js](character/PotionAlert.js) | Your active effects as a HUD column with expiry warnings, plus a scan flagging nearby players running combat buffs. Claims a default key with `module.setBind(keys.F7)`, and teaches the 0-based-amplifier / 1-based-level split and the `-1` living-only sentinel. |
 | [SprintSpeedHud.js](character/SprintSpeedHud.js) | A corner HUD panel with a live speed number, sprint indicator, and a fixed-timestep sparkline history. |
-| [LookAssist.js](character/LookAssist.js) | Smooth-looks at the nearest living entity in an FOV cone, composing the rotation proxy's anti-detection helpers (`patchConstantRotation`) on top of `setSmooth`. |
+| [LookAssist.js](character/LookAssist.js) | Smooth-looks at the nearest living entity in an FOV cone (optionally players only, via `entity.isPlayer()`), composing the rotation proxy's anti-detection helpers (`patchConstantRotation`) on top of `setSmooth`. |
 | [FallWarning.js](character/FallWarning.js) | Warns before a fall lands if the (deliberately approximate) estimated damage looks dangerous, with a pulsing screen-edge vignette. |
 | [PacketNoFall.js](character/PacketNoFall.js) | Rewrites the outbound movement packet's `onGround` flag to `true` while genuinely falling, demonstrating the packet scripting API's mutation model, with a `timer`-rate-limited debug log. |
 

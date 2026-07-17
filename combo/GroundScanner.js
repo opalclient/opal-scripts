@@ -26,11 +26,14 @@
 //
 //  THE GOTCHA THIS TEACHES
 //  ------------------------
-//  Like `AutoToolSwitcher.js`, this avoids the "no readable Vec3d" problem
-//  entirely by never touching player position as a vector: it reads
-//  `player.getBlockPosition()` (an integer `BlockPos`, fully readable) once,
-//  then constructs new `BlockPos` values by subtracting from `getY()` in a
-//  loop — no raycast, no direction vector, just block-grid arithmetic.
+//  Straight-down is a block-grid problem, not a vector one, so this never
+//  touches player position as a vector at all: it reads
+//  `player.getBlockPosition()` (an integer `BlockPos`) once, then constructs
+//  new `BlockPos` values by subtracting from `getY()` in a loop — no raycast,
+//  no direction vector, just block-grid arithmetic. `player.getPosition()`
+//  would hand back a `ScriptVec3` whose components read fine, but rounding a
+//  double back onto the block grid on every iteration only adds a way to be
+//  subtly wrong.
 //
 //  Settings:
 //    • Max Scan Depth  — how many blocks down to look before giving up.
@@ -81,7 +84,7 @@ script.registerModule(
         module.on("disable", () => {});
 
         module.on("preGameTick", () => {
-            if (mc.player === null || mc.world === null) return;
+            if (mc.getPlayer() === null || mc.getWorld() === null) return;
 
             if (player.isOnGround()) {
                 lastGap = 0;
@@ -101,7 +104,7 @@ script.registerModule(
         });
 
         module.on("renderScreen", () => {
-            if (!module.getBool("Show HUD") || mc.player === null || mc.world === null) return;
+            if (!module.getBool("Show HUD") || mc.getPlayer() === null || mc.getWorld() === null) return;
             if (player.isOnGround()) return;
 
             const dangerDepth = module.getNumber("Danger Depth");

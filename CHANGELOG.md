@@ -9,15 +9,69 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
--
+- `character/PotionAlert.js` — your active effects as a HUD column with expiry
+  warnings, plus a scan flagging nearby players running combat buffs. Exercises
+  `module.setBind(keys.F7)`, `player.getEffects()`, and the entity health /
+  armor / effect reads.
+- `combo/CombatHud.js` now draws the target health bar it previously carried a
+  comment explaining the absence of — `entity.getHealth()`/`getMaxHealth()`/
+  `getAbsorption()` read any living entity, not just the local player.
+- `character/LookAssist.js` gained a "Players Only" setting, backed by
+  `entity.isPlayer()`.
+- `tests/NameTagEsp.test.js` and `tests/PotionAlert.test.js` — the first tests
+  in the suite that drive a render/tick handler and assert on the coordinates
+  it produces, rather than only covering pure helpers.
 
 ### Changed
 
--
+- **BREAKING (runtime API): `entity.getName()` returns a String.** It used to
+  return a Minecraft `Component`; the `entity.getName().getString()` idiom is
+  gone. Affects `world/NameTagEsp.js`, `combo/CombatHud.js`,
+  `character/LookAssist.js`.
+- **BREAKING (runtime API): `mc.player` / `mc.world` do not exist** — use
+  `mc.getPlayer()` / `mc.getWorld()`. GraalVM JS does no bean-property mapping
+  under `HostAccess.EXPLICIT`, so the property form always read `undefined`.
+  31 call sites across 10 scripts migrated; every `mc.player === null` guard
+  among them had never once fired (`undefined === null` is `false`).
+- **BREAKING (runtime API): every collection the API returns is a `ScriptList`,
+  not a JS array.** It exports `size()`, `isEmpty()`, and `get(i)` — `.length`,
+  indexing, `for..of`, and `.map` are all unavailable. Affects
+  `modules.listAll`/`listCategory`/`listEnabled`, `player.getEffects`,
+  `world.getEntities`/`getLivingEntitiesInRange`/`getAdjacentDirections`,
+  `renderer.wrapText`, and `movement.yawPos`.
+- **BREAKING (runtime API): geometry and item types are wrappers with getters.**
+  `esp.getEntityBox2D` returns a `ScriptBox2D` (`getX()`/`getWidth()`/…, laid
+  out as `x, y, width, height`); positions and projections return `ScriptVec3`;
+  `player.getBoundingBox` returns `ScriptBox3D`; the `inventory` stack getters
+  return `ScriptItemStack`; `renderer.loadImage` returns a `ScriptImage` with a
+  working `isValid()`. Property access (`box.x`) reads `undefined`.
+- **BREAKING (runtime API): several methods were removed** —
+  `world.getBlockState()`, `world.getBlock()`, `client.getModule()`, and the
+  `Vec3i` global. All returned raw, unreadable types, so nothing could depend
+  on them. `new Vec3d(x, y, z)` now works and yields a `ScriptVec3`.
+- `tests/opal-stub.js` reworked to model the real sandbox contract instead of
+  the API the scripts assumed. Fakes are now throwing proxies shaped like the
+  Java wrappers, so reading an unexported member fails loudly instead of
+  answering `undefined`. See the file header and the README for why a green run
+  here still proves nothing about a sandbox denial.
 
 ### Fixed
 
--
+- `world/NameTagEsp.js` and `combo/CombatHud.js` drew nothing at all: both read
+  `box.x`/`box.z` off `esp.getEntityBox2D()`, which exposes no such properties,
+  so every coordinate downstream was `NaN`. Now use the `ScriptBox2D` accessors.
+- `core/SessionIsland.js` and `ui/StatsDashboard.js` rendered
+  "undefined modules on": `modules.listEnabled().length` on a `ScriptList`.
+  Now `size()`.
+- `core/ModuleGuard.js` printed nothing from `logCombatModules()`: it looped on
+  `combat.length` and indexed `combat[i]` over a `ScriptList`. Now
+  `size()`/`get(i)`.
+- Header comments across the gallery no longer teach idioms that never worked.
+  `AutoToolSwitcher.js` claimed a crosshair raycast was unbuildable from
+  script-land (`ScriptVec3` components are readable, so it is);
+  `CombatHud.js` claimed no entity health API existed; `LookAssist.js` claimed
+  no `isPlayer()` check existed; `GroundScanner.js` referred to a "no readable
+  Vec3d" problem that no longer exists.
 
 ## [0.1.0] — 2026-07-13
 

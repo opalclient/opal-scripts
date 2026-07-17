@@ -13,30 +13,28 @@
 //  want" example: no single proxy documents this HUD, it comes from wiring
 //  esp + player + world + rotation + renderer together.
 //
-//  WHY THERE'S NO TARGET HEALTH BAR
-//  ----------------------------------
-//  A combat HUD "should" show the target's health. The scripting API doesn't
-//  expose one: `player.getHealth()` only reads the *local* player, and there
-//  is no documented `Entity.getHealth()` proxy for arbitrary living entities
-//  (unlike `entity.getName()`, which the ESP examples confirm works directly).
-//  Rather than guess at an undocumented call that might not exist on every
-//  build, this HUD shows what the API actually gives you about a target:
-//  distance and aim offset — plus your own crit/weapon state, which is real,
-//  documented `player` data.
-//
 //  WHICH GLOBALS / EVENTS
 //  -----------------------
 //    • world       — getLivingEntitiesInRange to find candidates.
 //    • player      — getDistanceToEntity, canCrit, isHoldingWeapon, getAttackDamage.
 //    • rotation    — getEntityFOV, isEntityInFOV.
 //    • esp         — getEntityBox2D to draw the on-screen box (may be null).
-//    • renderer    — the box, gauge, and panel.
+//    • renderer    — the box, gauge, health bar, and panel.
 //    • renderScreen — where all of the above draw calls run.
+//
+//  READING A TARGET'S HEALTH
+//  --------------------------
+//  `entity.getHealth()` / `getMaxHealth()` / `getAbsorption()` read any living
+//  entity, not just you — `player.getHealth()` is the local-player-only
+//  equivalent. On a non-living entity they answer `-1`, the sentinel the whole
+//  API uses for "absent or not applicable", so the bar below gates on that
+//  rather than on a type check.
 //
 //  Settings:
 //    • Range           — search radius in blocks.
 //    • Lock FOV         — cone half-angle (degrees) considered "locked on".
 //    • Show Target Box  — draw the ESP outline + name when on-screen.
+//    • Show Health Bar  — draw the target's health bar in the panel.
 //    • Show Self Status — draw the crit/weapon/damage row.
 //
 //  Author: Opal  ·  A combo example of the esp + player + world + rotation +
@@ -58,6 +56,10 @@ const C = {
     gaugeTrack: renderer.color(40, 42, 52),
     gaugeFillGood: renderer.color(120, 220, 140),
     gaugeFillBad: renderer.color(255, 120, 110),
+    healthGood: renderer.color(120, 220, 140),
+    healthWarn: renderer.color(255, 196, 76),
+    healthBad: renderer.color(255, 96, 88),
+    absorption: renderer.color(255, 214, 96),
     good: renderer.color(120, 220, 140),
     idle: renderer.color(120, 124, 135),
 };
@@ -76,6 +78,7 @@ script.registerModule(
         module.addNumber("Range", 24, 4, 64, 1);
         module.addNumber("Gauge Max FOV", 60, 15, 180, 5);
         module.addBool("Show Target Box", true);
+        module.addBool("Show Health Bar", true);
         module.addBool("Show Self Status", true);
 
         module.on("enable", () => {
@@ -87,7 +90,7 @@ script.registerModule(
         });
 
         module.on("renderScreen", () => {
-            if (mc.player === null || mc.world === null) return;
+            if (mc.getPlayer() === null || mc.getWorld() === null) return;
 
             const target = findNearestTarget(module.getNumber("Range"));
             drawSelfStatus();
@@ -101,7 +104,7 @@ script.registerModule(
                 drawTargetBox(target.entity, locked);
             }
 
-            drawTargetPanel(target.entity.getName().getString(), distance, fovOffset, locked, module.getNumber("Gauge Max FOV"));
+            drawTargetPanel(target.entity, distance, fovOffset, locked, module.getNumber("Gauge Max FOV"));
         });
 
         /**
@@ -134,7 +137,7 @@ script.registerModule(
          * Draws the ESP outline + name above the target, if it's projectable
          * on-screen this frame (esp.getEntityBox2D returns null otherwise).
          *
-         * @param {object} entity The target entity.
+         * @param {ScriptEntity} entity The target entity.
          * @param {boolean} locked Whether the target is within the lock FOV.
          */
         function drawTargetBox(entity, locked) {
@@ -143,33 +146,41 @@ script.registerModule(
             if (box === null) return;
 
             const color = locked ? C.boxLocked : C.boxOut;
-            renderer.rectOutline(box.x, box.y, box.z, box.w, 1.4, color);
+            const x = box.getX();
+            const y = box.getY();
+            renderer.rectOutline(x, y, box.getWidth(), box.getHeight(), 1.4, color);
 
-            const name = entity.getName().getString();
+            const name = entity.getName();
             const size = 6.5;
             const nameW = renderer.textWidth("productsans-bold", name, size);
-            renderer.text("productsans-bold", name, box.x + box.z / 2 - nameW / 2, box.y - size - 3, size, color);
+            renderer.text("productsans-bold", name, x + box.getWidth() / 2 - nameW / 2, y - size - 3, size, color);
         }
 
         /**
-         * Draws the fixed side panel: target name, distance, and the FOV gauge.
+         * Draws the fixed side panel: target name, distance, health bar, and
+         * the FOV gauge.
          *
-         * @param {string} name       Target display name.
+         * @param {ScriptEntity} entity Target entity.
          * @param {number} distance   Distance to target in blocks.
          * @param {number} fovOffset  Degrees between the crosshair and the target.
          * @param {boolean} locked    Whether fovOffset is within the lock cutoff.
          * @param {number} gaugeMaxFov Degrees represented by a full gauge bar.
          */
-        function drawTargetPanel(name, distance, fovOffset, locked, gaugeMaxFov) {
+        function drawTargetPanel(entity, distance, fovOffset, locked, gaugeMaxFov) {
+            const showHealth = module.getBool("Show Health Bar") && entity.getHealth() >= 0;
             const sw = client.getScaledWidth();
             const panelW = GAUGE_W + 24;
-            const panelH = 56;
+            const panelH = showHealth ? 72 : 56;
             const x = sw - panelW - 8;
             const y = 8;
 
             renderer.roundedRect(x, y, panelW, panelH, 6, C.panelBg);
-            renderer.text("productsans-bold", name, x + 10, y + 8, 8, C.value);
+            renderer.text("productsans-bold", entity.getName(), x + 10, y + 8, 8, C.value);
             renderer.text("productsans-medium", distance.toFixed(1) + " m", x + 10, y + 22, 7, C.label);
+
+            if (showHealth) {
+                drawHealthBar(entity, x + 10, y + 34);
+            }
 
             const gaugeX = x + 10;
             const gaugeY = y + panelH - 16;
@@ -181,6 +192,36 @@ script.registerModule(
                 renderer.roundedRect(gaugeX, gaugeY, GAUGE_W * fraction, GAUGE_H, GAUGE_H / 2, fillColor);
             }
             renderer.text("productsans-medium", Math.round(fovOffset) + "°", gaugeX + GAUGE_W + 6, gaugeY - 1, 6.5, C.label);
+        }
+
+        /**
+         * Draws the target's health bar plus a "14.5 / 20" readout, colored by
+         * how much health is left. Absorption (golden hearts) is drawn as a
+         * separate overflow segment past the end of the bar rather than folded
+         * into the fraction, since it can exceed max health.
+         *
+         * @param {ScriptEntity} entity The target entity (living; caller checked the -1 sentinel).
+         * @param {number} x Left edge of the bar.
+         * @param {number} y Top edge of the bar.
+         */
+        function drawHealthBar(entity, x, y) {
+            const health = entity.getHealth();
+            const maxHealth = entity.getMaxHealth();
+            const absorption = entity.getAbsorption();
+            const fraction = maxHealth > 0 ? Math.max(0, Math.min(1, health / maxHealth)) : 0;
+
+            renderer.roundedRect(x, y, GAUGE_W, GAUGE_H, GAUGE_H / 2, C.gaugeTrack);
+            if (fraction > 0) {
+                const color = fraction > 0.5 ? C.healthGood : fraction > 0.25 ? C.healthWarn : C.healthBad;
+                renderer.roundedRect(x, y, GAUGE_W * fraction, GAUGE_H, GAUGE_H / 2, color);
+            }
+            if (absorption > 0) {
+                const absW = Math.min(GAUGE_W, (absorption / Math.max(maxHealth, 1)) * GAUGE_W);
+                renderer.roundedRect(x, y, absW, GAUGE_H, GAUGE_H / 2, C.absorption);
+            }
+
+            const text = health.toFixed(1) + " / " + maxHealth.toFixed(0);
+            renderer.text("productsans-medium", text, x + GAUGE_W + 6, y - 1, 6.5, C.label);
         }
 
         /**

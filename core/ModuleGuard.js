@@ -124,12 +124,17 @@ script.registerModule(
         /**
          * Prints every Combat-category module and its current enabled state —
          * a direct demonstration of `modules.listCategory(...)`.
+         *
+         * Note the loop: `listCategory` hands back a `ScriptList`, not a JS
+         * array. It exports `size()`/`isEmpty()`/`get(i)` and nothing else —
+         * `combat.length` and `combat[i]` read as `undefined`, and `for..of`
+         * throws. Every list the scripting API returns behaves this way.
          */
         function logCombatModules() {
             const combat = modules.listCategory(COMBAT_CATEGORY);
             client.print("[Module Guard] " + COMBAT_CATEGORY + " modules:");
-            for (let i = 0; i < combat.length; i++) {
-                const name = combat[i];
+            for (let i = 0; i < combat.size(); i++) {
+                const name = combat.get(i);
                 client.print("  " + name + " -> " + modules.isEnabled(name));
             }
         }

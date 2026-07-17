@@ -160,8 +160,8 @@ script.registerModule(
             renderer.blurFill(x, y, w, h, RADIUS);
             renderer.roundedRect(x, y, w, h, RADIUS, PANEL);
 
-            if (mc.world === null || world.getDimension() !== "minecraft:overworld") {
-                const label = mc.world === null ? "No world" : prettyDimension(world.getDimension());
+            if (mc.getWorld() === null || world.getDimension() !== "minecraft:overworld") {
+                const label = mc.getWorld() === null ? "No world" : prettyDimension(world.getDimension());
                 renderer.text("productsans-bold", label, x + PAD, y + h / 2 - 4, 8, DIM);
                 renderer.globalAlpha(1);
                 return;

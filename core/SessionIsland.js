@@ -166,7 +166,7 @@ script.registerModule(
                 });
             }
             if (module.getBool("Show Module Count")) {
-                const count = modules.listEnabled().length;
+                const count = modules.listEnabled().size();
                 rows.push({
                     text: count + (count === 1 ? " module on" : " modules on"),
                     font: "productsans-medium",
