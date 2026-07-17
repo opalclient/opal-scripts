@@ -24,12 +24,36 @@ credential handling of its own, so the relevant reports are:
   misleading in a way that could cause a downstream user harm if copied.
 - A dependency CVE in the optional lint tooling (if a `package.json` is
   ever added) that affects contributors.
+- A **sandbox escape** — a script reaching a host member, a class, or the
+  filesystem that the policy below is supposed to deny. That is a bug in the
+  engine rather than in this gallery, so report it against Opal itself, but
+  report it: it is the highest-severity class here.
+
+## How the scripting sandbox actually works
+
+Scripts do **not** run full-trust. Opal's engine runs GraalVM JS under a
+default-deny policy, and this is what makes a public gallery of scripts safe
+to offer at all:
+
+- **`HostAccess.EXPLICIT`** — a host member is reachable from a script only
+  if it is annotated `@HostAccess.Export`. Nothing else is visible, including
+  members of raw Minecraft types handed to a script.
+- **`allowHostClassLookup(name -> false)`** — `Java.type(...)` is denied, so
+  a script cannot reach arbitrary Java classes. The only class globals are
+  host-curated (`Color`, `Vec3d`, `BlockPos`, `Vec2f`).
+- **`IOAccess.NONE`** — no filesystem access.
+
+Java imports being off is the deliberate design, not a limitation to work
+around: it is the property that lets a stranger's script from this gallery be
+run without handing it the JVM. A script that needs a capability it lacks
+wants a new `@HostAccess.Export` proxy method in Opal, not a way past the
+policy.
 
 ## What is *not* a security issue here
 
-- The fact that Opal scripts run full-trust with no sandbox — that is a
-  documented, intentional property of the scripting engine itself (see
-  [Opal's scripting docs](CLAUDE.md)), not a bug in this repository.
+- The sandbox denying a script something — no `Java.type(...)`, no
+  filesystem, no members on un-exported types. That is the intended policy
+  described above, working, not a bug.
 - Normal bug reports about a script not working on a given Opal build —
   open a regular issue instead.
 - Disagreement with documented behavior.

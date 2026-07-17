@@ -40,7 +40,8 @@ for the full API reference.
    - A settings block where it makes sense (`addBool` / `addNumber` /
      `addMode` / `addGroup`) — a realistic, configurable module, not a toy.
    - Null-guards before touching `player` / `world` / `inventory`:
-     `if (mc.player === null || mc.world === null) return;`
+     `if (mc.getPlayer() === null || mc.getWorld() === null) return;` — the
+     call form, never `mc.player`, which reads `undefined` and never guards.
    - Colors built with `renderer.color(r, g, b[, a])` — never a raw
      `0xAARRGGBB` literal (see [CLAUDE.md](CLAUDE.md) for why).
    - `authors` in `registerScript({ ... })` set to your name/handle.
