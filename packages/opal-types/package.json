@@ -1,0 +1,8 @@
+{
+  "name": "@opal-scripts/opal-types",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Canonical ambient type definitions for the Opal scripting API — the single source of truth the IDE shims copy from.",
+  "types": "opal-globals.d.ts",
+  "files": ["opal-globals.d.ts"]
+}
