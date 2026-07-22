@@ -1,0 +1,17 @@
+{
+  "name": "opal-scripts",
+  "private": true,
+  "type": "module",
+  "workspaces": ["packages/*", "scripts/*", "template"],
+  "scripts": {
+    "build": "node tools/build.mjs",
+    "test": "node tools/test.mjs",
+    "lint": "biome check .",
+    "validate": "node tools/validate-manifest.mjs && node tools/publish-safety.mjs"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.5.5",
+    "esbuild": "^0.28.1",
+    "typescript": "^7.0.2"
+  }
+}

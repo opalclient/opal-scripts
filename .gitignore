@@ -9,9 +9,16 @@
 # Per-repo Claude Code overrides.
 .claude/*.local.md
 
-# Dependencies (only relevant if a package.json / lint config is added later)
+# Dependencies
 node_modules/
 .pnpm-store/
+
+# Build output — bundles are produced by tools/build.mjs, never committed.
+dist/
+
+# Untracked rescue inputs staged for later migration tasks (see the
+# restructure plan); never commit this directory.
+.rescue/
 
 # OS / editor cruft
 .DS_Store
