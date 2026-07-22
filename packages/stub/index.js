@@ -48,6 +48,22 @@
 //    stub.installGlobals();
 //    stub.evalScript(require("node:path").join(__dirname, "..", "src", "Chomp.js"));
 //    const engine = globalThis.__chomp_test; // set by the script under __CHOMP_TEST__
+//
+//  DETERMINISM IS CALLER DISCIPLINE (one stub per test file). A successful
+//  `evalScript` leaves the frozen `Date.now` and seeded `Math.random` INSTALLED
+//  so the caller can drive gameplay deterministically; the caller is responsible
+//  for `restoreClock()`/`restoreRandom()` at end of file. This matters because
+//  `tools/test.mjs` imports every test file into one process — a file that
+//  froze the clock and never restored would poison the files that run after it.
+//  (A mid-eval throw self-restores; only the success path persists.)
+//
+//  STORAGE-ABSENT TESTING BYPASSES evalScript. `evalScript` calls
+//  `installGlobals`, which re-installs `storage` — so it cannot model the
+//  "no storage global" case. To test that path, `delete globalThis.storage`
+//  and eval the source yourself with a manual indirect eval:
+//    const src = require("node:fs").readFileSync(scriptPath, "utf8");
+//    delete globalThis.storage;
+//    (0, eval)(src); // typeof storage === "undefined" inside the script
 // =============================================================================
 
 const fs = require("node:fs");
@@ -937,13 +953,20 @@ function createOpalStub(options = {}) {
         });
         return self;
     }
-    const Vec2f = (yaw, pitch) => makeFakeVec2f(yaw, pitch);
-    const Vec3d = (x, y, z) => makeFakeVec3(x, y, z);
+    // Function declarations (not arrows) so both `new Vec3d(...)` and `Vec3d(...)`
+    // yield the fake — the d.ts models these as constructible, and the old stub
+    // used classes. A regular function that returns an object satisfies `new`.
+    function Vec2f(yaw, pitch) {
+        return makeFakeVec2f(yaw, pitch);
+    }
+    function Vec3d(x, y, z) {
+        return makeFakeVec3(x, y, z);
+    }
     // Color's two ctors and getRGB() are the JDK allow-list exception — real.
-    const Color = (r, g, b, a) => {
+    function Color(r, g, b, a) {
         const rgb = packColor(r, g, b, a);
         return { getRGB: () => rgb };
-    };
+    }
     // MathHelper is the raw Mojang `Mth`, un-exported — a memberless brand.
     const MathHelper = makeOpaqueToken("MathHelper");
 
@@ -1007,7 +1030,17 @@ function createOpalStub(options = {}) {
         // sandbox test harness — this is not untrusted third-party input.
         // biome-ignore lint/security/noGlobalEval: harness evals the script under test by design
         const indirectEval = eval;
-        return indirectEval(source);
+        try {
+            return indirectEval(source);
+        } catch (err) {
+            // A script that throws mid-eval must not leave the frozen clock and
+            // seeded random installed for the rest of the process. On SUCCESS the
+            // determinism stays engaged on purpose — the caller drives gameplay
+            // against it, and restores at end of file (see the header note).
+            restoreClock();
+            restoreRandom();
+            throw err;
+        }
     }
 
     // =========================================================================
