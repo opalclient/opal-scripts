@@ -7,7 +7,7 @@
 //   node tools/build.mjs            build every scripts/<id>/ folder
 //   node tools/build.mjs <id>       build just scripts/<id>/
 
-import { existsSync, mkdirSync, statSync } from "node:fs";
+import { existsSync, mkdirSync, rmSync, statSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import * as esbuild from "esbuild";
@@ -24,6 +24,12 @@ const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), ".."
 async function buildOne(folder) {
     const manifest = readManifest(folder.manifestPath);
 
+    // The bundle is named after manifest.id, not the folder-derived id — so
+    // this has to hold even when build runs standalone, before validate.
+    if (manifest.id !== folder.id) {
+        throw new Error(`manifest id "${manifest.id}" does not match its folder name "${folder.id}"`);
+    }
+
     if (typeof manifest.entry !== "string" || manifest.entry.trim() === "") {
         throw new Error('manifest.json is missing a non-empty "entry" field');
     }
@@ -35,7 +41,7 @@ async function buildOne(folder) {
 
     const outDir = path.join(folder.dir, "dist");
     mkdirSync(outDir, { recursive: true });
-    const outfile = path.join(outDir, `${folder.id}.js`);
+    const outfile = path.join(outDir, `${manifest.id}.js`);
 
     await esbuild.build({
         entryPoints: [entryPoint],
@@ -48,12 +54,13 @@ async function buildOne(folder) {
 
     const { size } = statSync(outfile);
     if (size > MAX_BUNDLE_BYTES) {
+        rmSync(outfile);
         throw new Error(
             `bundle is ${(size / 1024).toFixed(1)} KB, over the 1 MB cap (${path.relative(repoRoot, outfile)})`,
         );
     }
 
-    console.log(`build ok    ${folder.id} -> ${path.relative(repoRoot, outfile)} (${(size / 1024).toFixed(1)} KB)`);
+    console.log(`build ok    ${manifest.id} -> ${path.relative(repoRoot, outfile)} (${(size / 1024).toFixed(1)} KB)`);
 }
 
 async function main() {
