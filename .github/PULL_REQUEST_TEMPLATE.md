@@ -22,7 +22,8 @@ For anything beyond a typo or one-line fix, open an issue first (the
 
 - Script id: `scripts/<id>`
 - What changed and why:
-- Version bump: `<old>` → `<new>` (in both `manifest.json` and `package.json`)
+- Version bump: `<old>` → `<new>` in `manifest.json` (the folder's
+  `package.json` stays at its `0.0.0` placeholder — it isn't published)
 
 ### Tooling / docs / CI change?
 

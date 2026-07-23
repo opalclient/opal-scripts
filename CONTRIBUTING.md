@@ -37,9 +37,11 @@ before the detailed steps below:
 1. **Fork** the repo and clone your fork.
 2. **Copy `template/`** to `scripts/<your-id>/` — kebab-case, matching the
    `id` you'll give it.
-3. **Rename the id everywhere**: `manifest.json`'s `id`, `package.json`'s
-   `name` (`@opal-scripts/<your-id>`), and the `registerScript({ id: ... })`
-   call in your entry file all need to match the folder name.
+3. **Rename the id everywhere**: the folder name, `manifest.json`'s `id`,
+   and `package.json`'s `name` (`@opal-scripts/<your-id>`) all need to
+   match. `registerScript({...})` doesn't take an `id` — only `name`,
+   `version`, and `authors` — so update its `name` too if you want the
+   display name to change; it doesn't have to match the folder/id.
 4. **`bun install`** at the repo root. This links your new folder into the
    workspace so it can see `@opal-scripts/opal-types` (ambient globals) and
    `@opal-scripts/stub` (the test harness).
@@ -53,7 +55,9 @@ before the detailed steps below:
    pass/fail/skipped table for validate, lint, typecheck, build, test, and
    check:template. An all-pass table plus green required checks means it's
    ready for human review; a failing row tells you which local command to
-   rerun.
+   rerun. PRs from a fork don't get this comment (the token is read-only
+   there) — check the Checks tab on the PR instead, it has the same
+   per-gate pass/fail.
 8. **Review** happens against [Review criteria](#review-criteria) further
    down — sandbox-API-only, no obfuscation, tests for nontrivial logic, an
    accurate manifest, publish-safe.
