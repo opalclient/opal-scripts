@@ -110,6 +110,10 @@
     "template": {
       "name": "@opal-scripts/template",
       "version": "0.0.0",
+      "dependencies": {
+        "@opal-scripts/opal-types": "workspace:*",
+        "@opal-scripts/stub": "workspace:*",
+      },
     },
   },
   "packages": {

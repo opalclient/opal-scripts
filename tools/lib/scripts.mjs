@@ -55,3 +55,23 @@ export function readManifest(manifestPath) {
     const raw = readFileSync(manifestPath, "utf8");
     return JSON.parse(raw);
 }
+
+/**
+ * Resolves the special top-level `template/` folder (a sibling of
+ * `scripts/`, not nested under it) as a ScriptFolder-shaped object. It is
+ * never part of the bulk "every folder" loop in build/validate/test — it is
+ * not a real script — but a caller can still ask to build it by id
+ * (`bun run build template`). Returns `null` if `template/manifest.json`
+ * doesn't exist yet.
+ *
+ * @param {string} repoRoot
+ * @returns {ScriptFolder | null}
+ */
+export function findTemplateFolder(repoRoot) {
+    const dir = path.join(repoRoot, "template");
+    const manifestPath = path.join(dir, "manifest.json");
+    if (!existsSync(manifestPath)) {
+        return null;
+    }
+    return { id: "template", dir, manifestPath };
+}

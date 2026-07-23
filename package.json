@@ -7,7 +7,8 @@
     "build": "node tools/build.mjs",
     "test": "node tools/test.mjs",
     "lint": "biome check .",
-    "validate": "node tools/validate-manifest.mjs && node tools/publish-safety.mjs"
+    "validate": "node tools/validate-manifest.mjs && node tools/publish-safety.mjs",
+    "check:template": "node tools/build.mjs template && tsc --noEmit -p template && node template/tests/main.test.js"
   },
   "devDependencies": {
     "@biomejs/biome": "2.5.5",

@@ -6,13 +6,15 @@
 // Usage:
 //   node tools/build.mjs            build every scripts/<id>/ folder
 //   node tools/build.mjs <id>       build just scripts/<id>/
+//   node tools/build.mjs template   build the root-level template/ folder
+//                                   (never included in the two forms above)
 
 import { existsSync, mkdirSync, rmSync, statSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import * as esbuild from "esbuild";
 
-import { findScriptFolders, readManifest } from "./lib/scripts.mjs";
+import { findScriptFolders, findTemplateFolder, readManifest } from "./lib/scripts.mjs";
 
 const MAX_BUNDLE_BYTES = 1024 * 1024; // 1 MB cap, per the repo spec
 
@@ -65,6 +67,28 @@ async function buildOne(folder) {
 
 async function main() {
     const id = process.argv[2];
+
+    // template/ lives at the repo root, not under scripts/ - it's never part
+    // of the bulk "every folder" loop below (it isn't a real script; see
+    // validate-manifest.mjs), but it must still be buildable on request so
+    // `bun run check:template` (and a contributor's own smoke test before
+    // copying it) can produce dist/template.js.
+    if (id === "template") {
+        const templateFolder = findTemplateFolder(repoRoot);
+        if (!templateFolder) {
+            console.error("build: no template/manifest.json found");
+            process.exitCode = 1;
+            return;
+        }
+        try {
+            await buildOne(templateFolder);
+        } catch (err) {
+            console.error(`build FAILED  template: ${err instanceof Error ? err.message : String(err)}`);
+            process.exitCode = 1;
+        }
+        return;
+    }
+
     const folders = findScriptFolders(repoRoot);
 
     if (folders.length === 0) {

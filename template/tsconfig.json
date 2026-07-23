@@ -1,0 +1,15 @@
+{
+    "$schema": "https://json.schemastore.org/tsconfig",
+    "extends": "../tsconfig.base.json",
+    "compilerOptions": {
+        // The base config's "types": [] means nothing gets pulled in
+        // automatically - naming the package here is what makes
+        // opal-globals.d.ts's ambient declarations (registerScript, player,
+        // renderer, storage, keys, ...) visible without an import statement.
+        // Resolved via the workspace symlink at
+        // node_modules/@opal-scripts/opal-types (bun install; see
+        // packages/opal-types/package.json's "types" field).
+        "types": ["@opal-scripts/opal-types"]
+    },
+    "include": ["src/**/*.ts"]
+}
