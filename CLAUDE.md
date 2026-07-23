@@ -15,7 +15,7 @@ scripts/<id>/            one folder per script — manifest.json, package.json,
                           src/<entry>, optional tests/
 packages/
   opal-types/             opal-globals.d.ts — canonical ambient types for
-                           every proxy global (single source of truth)
+                           every proxy global
   stub/                   createOpalStub() — the shared sandbox stub tests
                           load a built script against
 template/                 copy this to start a new TypeScript script
@@ -102,17 +102,16 @@ off a shared engine.
 - **Edge-trigger, don't level-trigger, a tick-rate poll.** A condition
   checked 20 times a second will fire 20 toasts a second unless you track
   "have I already acted on this?" and only act on the transition. See
-  `scripts/milestone-toasts/` and `scripts/ground-scanner/`.
+  `scripts/milestone-toasts/`.
 - **A module owns what it disables.** If a module toggles a *different*
-  module off (`scripts/module-guard/`), track whether *this script* was the
-  one that turned it off before ever turning it back on — never assume
-  ownership of a setting the player controls manually.
+  module off, track whether *this script* was the one that turned it off
+  before ever turning it back on — never assume ownership of a setting the
+  player controls manually.
 - **Palette views are their own render surface.** `palette.createView({ id,
   render(x, y, w, h, dt), keyPressed, ... })` gets a `dt` that is real
   wall-clock seconds (clamped to 0.1s), not a tick. Anything time-based in a
-  palette view (`scripts/reaction-tester/`, `scripts/stats-dashboard/`,
-  `scripts/chomp/`) accumulates `dt`, it does not assume a fixed 1/20s step
-  the way `preGameTick` logic can.
+  palette view (`scripts/reaction-tester/`, `scripts/chomp/`) accumulates
+  `dt`, it does not assume a fixed 1/20s step the way `preGameTick` logic can.
 - **`storage` persists across sessions, per script.** `storage.set(key,
   value)` / `.get(key)` (returns `string | null` — `null` means never set,
   not `""`/`0`) / `.remove(key)` / `.keys()`. Storage is isolated per
@@ -154,11 +153,11 @@ Every `scripts/<id>/manifest.json` (checked by
 {
   "id": "chomp",
   "name": "Chomp",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "authors": ["trq"],
   "description": "Roguelite arcade game for the command palette.",
   "category": "ui",
-  "entry": "src/Chomp.js"
+  "entry": "src/main.ts"
 }
 ```
 
@@ -238,9 +237,9 @@ anything beyond the technical, example-focused scope of this repo — see
   top of the entry file (see any existing `scripts/<id>/src/` for the shape).
 - JSDoc on non-trivial helper functions (params + returns), matching the
   style already in the gallery.
-- `bun run lint` (Biome) covers `tools/`, `packages/`, and `template/`.
-  Script folders under `scripts/` aren't Biome-linted individually today —
-  match the existing style by hand.
+- `bun run lint` (Biome) covers `tools/`, `packages/`, `template/`, and
+  `scripts/chomp/src/`. TS script sources are linted; plain-JS gallery
+  scripts aren't — match the existing style by hand.
 - Tests: `packages/stub`'s `createOpalStub()` installs the sandbox globals
   onto `globalThis`. A script exports its pure helpers the same way as
   before — a guarded

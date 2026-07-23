@@ -29,12 +29,52 @@ reference.
 | Security vulnerability | **Do not open a public issue.** See [SECURITY.md](SECURITY.md). |
 | Pull request (new script or fix) | Fork, branch off `main`, open a PR. See below. |
 
+## Your first script, start to finish
+
+The condensed version of the whole path, if you'd rather see it end to end
+before the detailed steps below:
+
+1. **Fork** the repo and clone your fork.
+2. **Copy `template/`** to `scripts/<your-id>/` — kebab-case, matching the
+   `id` you'll give it.
+3. **Rename the id everywhere**: the folder name, `manifest.json`'s `id`,
+   and `package.json`'s `name` (`@opal-scripts/<your-id>`) all need to
+   match. `registerScript({...})` doesn't take an `id` (only `name`,
+   `version`, and `authors`), so update its `name` too if you want the
+   display name to change; it doesn't have to match the folder/id.
+4. **`bun install`** at the repo root. This links your new folder into the
+   workspace so it can see `@opal-scripts/opal-types` (ambient globals) and
+   `@opal-scripts/stub` (the test harness).
+5. **Build and test it locally**: `bun run build <your-id> && bun run test
+   <your-id>` (add `bunx tsc --noEmit -p scripts/<your-id>` if it's
+   TypeScript). Then run it in a real Opal client — see step 7 of
+   [Adding a new script](#adding-a-new-script) below.
+6. **Open the PR** using the template — keep the "New script" section, fill
+   in the gate checklist as you actually run each command.
+7. **Read the bot comment.** CI posts one sticky comment on the PR with a
+   pass/fail/skipped table for validate, lint, typecheck, build, test, and
+   check:template. An all-pass table plus green required checks means it's
+   ready for human review; a failing row tells you which local command to
+   rerun. PRs from a fork don't get this comment (the token is read-only
+   there) — check the Checks tab on the PR instead, it has the same
+   per-gate pass/fail.
+8. **Review** happens against [Review criteria](#review-criteria) further
+   down — sandbox-API-only, no obfuscation, tests for nontrivial logic, an
+   accurate manifest, publish-safe.
+9. **Merge is publication.** A CODEOWNERS approval plus green CI and
+   merging to `main` is what ships the script — there's no separate publish
+   step. Tagging a release (`<id>@<version>`) to build the distributable
+   bundle happens after merge and is maintainer-side, not something a
+   contributor needs to do.
+
+The rest of this document covers each of those steps in more detail.
+
 ## Adding a new script
 
 1. **Copy `template/`** to `scripts/<your-id>/` (kebab-case, matching the
    `id` you'll put in the manifest) — the fastest path to a typechecked,
-   bundled, tested TypeScript script. Prefer plain JavaScript? Copy any
-   existing `scripts/<id>/` folder instead and drop the `tsconfig.json`; the
+   bundled, tested TypeScript script. Prefer plain JavaScript? Copy
+   `scripts/milestone-toasts/` instead and drop the `tsconfig.json`; the
    build/test tools work with either. See [template/README.md](template/README.md)
    for the full copy-folder walkthrough.
 2. **Fill in `manifest.json`**: `id` (equals the folder name), `name`,
@@ -120,7 +160,7 @@ Every commit subject **must** follow Conventional Commits:
 ```
 <type>(<optional scope>): <imperative summary, lowercase, no period>
 
-<optional body — wrap at ~72 chars — explain the why>
+<optional body explaining the why, wrapped at ~72 chars>
 
 <optional Fixes #123 or BREAKING CHANGE: ... footer>
 ```
@@ -131,7 +171,7 @@ Every commit subject **must** follow Conventional Commits:
 `ci`, `chore`, `revert`.
 
 A new script is typically `feat(scripts): add <id>` (or a scope matching its
-category, e.g. `feat(world): add day-cycle-clock`).
+category, e.g. `feat(character): add packet-no-fall`).
 
 ### Hard rules
 
@@ -152,8 +192,9 @@ category, e.g. `feat(world): add day-cycle-clock`).
 - TypeScript scripts (anything with a `tsconfig.json`) typecheck under the
   strict compiler options in `tsconfig.base.json` — the per-folder
   `tsc --noEmit` has to pass. `bun run lint` (Biome) covers `tools/`,
-  `packages/`, and `template/` only; `scripts/**` isn't Biome-linted
-  individually today, so match the existing style by hand there.
+  `packages/`, `template/`, and `scripts/chomp/src/`. TS script sources
+  are linted; plain-JS gallery scripts aren't, so match the existing style
+  by hand there.
 - No obfuscation — reviewers (and downstream users learning from your script)
   need to read the code plainly.
 - No network calls, no filesystem access outside what the Opal APIs expose,

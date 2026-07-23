@@ -46,7 +46,7 @@
 //  Usage (whole-file harness — eval a script that self-registers a test hook):
 //    const stub = require("@opal-scripts/stub").createOpalStub();
 //    stub.installGlobals();
-//    stub.evalScript(require("node:path").join(__dirname, "..", "src", "Chomp.js"));
+//    stub.evalScript(require("node:path").join(__dirname, "..", "dist", "chomp.js"));
 //    const engine = globalThis.__chomp_test; // set by the script under __CHOMP_TEST__
 //
 //  DETERMINISM IS CALLER DISCIPLINE (one stub per test file). A successful

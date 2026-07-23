@@ -1,0 +1,40 @@
+{
+    "$schema": "https://json.schemastore.org/tsconfig",
+    "compilerOptions": {
+        // This intentionally duplicates tsconfig.base.json's compilerOptions
+        // instead of "extends"-ing it. A script folder is meant to be
+        // self-contained (see template/tsconfig.json) - a relative "extends"
+        // path resolves against the folder's own location, so it breaks at any
+        // depth other than the original (reproduced: TS5083, "File
+        // '../tsconfig.base.json' not found"). Self-contained means this
+        // folder's tsconfig just works, unmodified. If tsconfig.base.json ever
+        // changes, mirror the change here by hand.
+        "target": "ES2022",
+        "module": "ES2022",
+        "lib": ["ES2022"],
+        "moduleResolution": "bundler",
+        "resolveJsonModule": true,
+        "allowJs": false,
+        "strict": true,
+        "esModuleInterop": true,
+        "skipLibCheck": true,
+        "forceConsistentCasingInFileNames": true,
+        "isolatedModules": true,
+        "verbatimModuleSyntax": true,
+        "noEmit": true,
+        "noUncheckedIndexedAccess": true,
+        "noImplicitReturns": true,
+        "noFallthroughCasesInSwitch": true,
+        "noUnusedLocals": true,
+        "noUnusedParameters": true,
+        // Naming the package here is what makes opal-globals.d.ts's ambient
+        // declarations (registerScript, renderer, storage, keys, ...) visible
+        // without an import statement. This resolves via the workspace symlink
+        // at node_modules/@opal-scripts/opal-types.
+        "types": ["@opal-scripts/opal-types"]
+    },
+    // The whole TypeScript engine + game project under src/ (entry src/main.ts,
+    // bundled by esbuild into dist/chomp.js). allowJs is off, so the glob picks
+    // up every .ts and nothing else.
+    "include": ["src/**/*.ts"]
+}

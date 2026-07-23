@@ -18,64 +18,17 @@
       "name": "@opal-scripts/stub",
       "version": "0.0.0",
     },
-    "scripts/auto-tool-switcher": {
-      "name": "@opal-scripts/auto-tool-switcher",
-      "version": "0.0.0",
-      "dependencies": {
-        "@opal-scripts/stub": "workspace:*",
-      },
-    },
     "scripts/chomp": {
       "name": "@opal-scripts/chomp",
       "version": "0.0.0",
       "dependencies": {
+        "@opal-scripts/opal-types": "workspace:*",
         "@opal-scripts/stub": "workspace:*",
       },
-    },
-    "scripts/combat-hud": {
-      "name": "@opal-scripts/combat-hud",
-      "version": "0.0.0",
-    },
-    "scripts/day-cycle-clock": {
-      "name": "@opal-scripts/day-cycle-clock",
-      "version": "0.0.0",
-      "dependencies": {
-        "@opal-scripts/stub": "workspace:*",
-      },
-    },
-    "scripts/fall-warning": {
-      "name": "@opal-scripts/fall-warning",
-      "version": "0.0.0",
-      "dependencies": {
-        "@opal-scripts/stub": "workspace:*",
-      },
-    },
-    "scripts/ground-scanner": {
-      "name": "@opal-scripts/ground-scanner",
-      "version": "0.0.0",
-    },
-    "scripts/hud-panel-showcase": {
-      "name": "@opal-scripts/hud-panel-showcase",
-      "version": "0.0.0",
-    },
-    "scripts/look-assist": {
-      "name": "@opal-scripts/look-assist",
-      "version": "0.0.0",
     },
     "scripts/milestone-toasts": {
       "name": "@opal-scripts/milestone-toasts",
       "version": "0.0.0",
-    },
-    "scripts/module-guard": {
-      "name": "@opal-scripts/module-guard",
-      "version": "0.0.0",
-    },
-    "scripts/name-tag-esp": {
-      "name": "@opal-scripts/name-tag-esp",
-      "version": "0.0.0",
-      "dependencies": {
-        "@opal-scripts/stub": "workspace:*",
-      },
     },
     "scripts/packet-no-fall": {
       "name": "@opal-scripts/packet-no-fall",
@@ -84,27 +37,8 @@
         "@opal-scripts/stub": "workspace:*",
       },
     },
-    "scripts/potion-alert": {
-      "name": "@opal-scripts/potion-alert",
-      "version": "0.0.0",
-      "dependencies": {
-        "@opal-scripts/stub": "workspace:*",
-      },
-    },
     "scripts/reaction-tester": {
       "name": "@opal-scripts/reaction-tester",
-      "version": "0.0.0",
-    },
-    "scripts/session-island": {
-      "name": "@opal-scripts/session-island",
-      "version": "0.0.0",
-    },
-    "scripts/sprint-speed-hud": {
-      "name": "@opal-scripts/sprint-speed-hud",
-      "version": "0.0.0",
-    },
-    "scripts/stats-dashboard": {
-      "name": "@opal-scripts/stats-dashboard",
       "version": "0.0.0",
     },
     "template": {
@@ -187,41 +121,15 @@
 
     "@esbuild/win32-x64": ["@esbuild/win32-x64@0.28.1", "", { "os": "win32", "cpu": "x64" }, "sha512-bm4Mowrv+GXMlpWX++EcXw/iLyd1o3+bJkC2DkWXYVvgZCqD/bSj9ctZeAMC3cIxgjRVR2Dufaiu4YPxr5gW1A=="],
 
-    "@opal-scripts/auto-tool-switcher": ["@opal-scripts/auto-tool-switcher@workspace:scripts/auto-tool-switcher"],
-
     "@opal-scripts/chomp": ["@opal-scripts/chomp@workspace:scripts/chomp"],
 
-    "@opal-scripts/combat-hud": ["@opal-scripts/combat-hud@workspace:scripts/combat-hud"],
-
-    "@opal-scripts/day-cycle-clock": ["@opal-scripts/day-cycle-clock@workspace:scripts/day-cycle-clock"],
-
-    "@opal-scripts/fall-warning": ["@opal-scripts/fall-warning@workspace:scripts/fall-warning"],
-
-    "@opal-scripts/ground-scanner": ["@opal-scripts/ground-scanner@workspace:scripts/ground-scanner"],
-
-    "@opal-scripts/hud-panel-showcase": ["@opal-scripts/hud-panel-showcase@workspace:scripts/hud-panel-showcase"],
-
-    "@opal-scripts/look-assist": ["@opal-scripts/look-assist@workspace:scripts/look-assist"],
-
     "@opal-scripts/milestone-toasts": ["@opal-scripts/milestone-toasts@workspace:scripts/milestone-toasts"],
-
-    "@opal-scripts/module-guard": ["@opal-scripts/module-guard@workspace:scripts/module-guard"],
-
-    "@opal-scripts/name-tag-esp": ["@opal-scripts/name-tag-esp@workspace:scripts/name-tag-esp"],
 
     "@opal-scripts/opal-types": ["@opal-scripts/opal-types@workspace:packages/opal-types"],
 
     "@opal-scripts/packet-no-fall": ["@opal-scripts/packet-no-fall@workspace:scripts/packet-no-fall"],
 
-    "@opal-scripts/potion-alert": ["@opal-scripts/potion-alert@workspace:scripts/potion-alert"],
-
     "@opal-scripts/reaction-tester": ["@opal-scripts/reaction-tester@workspace:scripts/reaction-tester"],
-
-    "@opal-scripts/session-island": ["@opal-scripts/session-island@workspace:scripts/session-island"],
-
-    "@opal-scripts/sprint-speed-hud": ["@opal-scripts/sprint-speed-hud@workspace:scripts/sprint-speed-hud"],
-
-    "@opal-scripts/stats-dashboard": ["@opal-scripts/stats-dashboard@workspace:scripts/stats-dashboard"],
 
     "@opal-scripts/stub": ["@opal-scripts/stub@workspace:packages/stub"],
 

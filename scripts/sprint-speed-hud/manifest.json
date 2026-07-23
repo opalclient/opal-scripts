@@ -1,9 +1,0 @@
-{
-    "id": "sprint-speed-hud",
-    "name": "Sprint Speed HUD",
-    "version": "1.0.0",
-    "authors": ["Opal"],
-    "description": "Corner HUD panel: live speed number, sprint indicator, and a sparkline history.",
-    "category": "character",
-    "entry": "src/SprintSpeedHud.js"
-}

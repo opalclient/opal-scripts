@@ -3,6 +3,7 @@
     "version": "0.0.0",
     "private": true,
     "dependencies": {
+        "@opal-scripts/opal-types": "workspace:*",
         "@opal-scripts/stub": "workspace:*"
     }
 }

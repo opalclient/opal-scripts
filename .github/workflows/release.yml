@@ -1,6 +1,6 @@
 # Publishes a single script's bundle as a GitHub Release.
 #
-# Trigger a release by tagging `<id>@<version>` (e.g. `chomp@1.1.0`), where
+# Trigger a release by tagging `<id>@<version>` (e.g. `chomp@1.2.0`), where
 # `<id>` is a scripts/<id>/ folder name and `<version>` matches that folder's
 # manifest.json "version" field exactly. `template/` is a scaffold, not a
 # published script, and is rejected.

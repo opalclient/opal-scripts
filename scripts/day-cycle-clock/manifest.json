@@ -1,9 +1,0 @@
-{
-    "id": "day-cycle-clock",
-    "name": "Day Cycle Clock",
-    "version": "1.0.0",
-    "authors": ["Opal"],
-    "description": "Dynamic Island showing the in-game clock and day/night progress.",
-    "category": "world",
-    "entry": "src/DayCycleClock.js"
-}

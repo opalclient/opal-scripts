@@ -1,14 +1,14 @@
 # scripts
 
-> The official public home of [Opal](https://opal.wtf) scripts: a curated
-> gallery, a TypeScript template to build your own, and a PR-based
-> contribution pipeline with CI gates — managed like a script marketplace,
-> Raycast-extensions-style.
+> The official home of [Opal](https://opal.wtf) scripts: a gallery of
+> ready-to-run examples, a TypeScript template to build your own, and a
+> PR-based contribution pipeline with CI gates. Run like a small script
+> marketplace, Raycast-extensions-style.
 
 ## What this is
 
 Opal's scripting engine loads plain `.js` files from an `opal/scripts/`
-folder and exposes a curated set of proxy globals (`client`, `player`,
+folder and exposes a fixed set of proxy globals (`client`, `player`,
 `world`, `renderer`, `palette`, `storage`, ...) onto the running Minecraft
 client. This repo is where every official script is built, tested, and
 released from: one folder per script, a canonical set of API typings, a
@@ -36,8 +36,8 @@ scripts/<id>/            one folder per script
   src/                     entry point per manifest.entry (.js or .ts)
   tests/                   optional; runs against packages/stub in CI
 packages/
-  opal-types/             canonical opal-globals.d.ts — single source of truth
-                           for the scripting API's ambient types
+  opal-types/             canonical opal-globals.d.ts — the ambient types for
+                           the scripting API
   stub/                   shared sandbox stub (createOpalStub) that lets a
                            test load and drive a built script outside a live client
 template/                 copy this folder to start a new TypeScript script —
@@ -84,8 +84,8 @@ scripts that ship a palette view — like [Chomp](scripts/chomp/)).
    `scripts/my-cool-script/package.json` (`"name": "@opal-scripts/my-cool-script"`).
 3. **Install and write it**: `bun install`, then edit `src/main.ts`. Every
    Opal global is typed ambiently by `@opal-scripts/opal-types` — nothing to
-   import. Prefer plain JavaScript? Copy any existing `scripts/<id>/` folder
-   instead and drop the `tsconfig.json` — the build/test tools work with either.
+   import. Prefer plain JavaScript? Copy `scripts/milestone-toasts/` instead
+   and drop the `tsconfig.json` — the build/test tools work with either.
 4. **Typecheck, build, and test**:
    ```bash
    bunx tsc --noEmit -p scripts/my-cool-script   # if you kept the tsconfig
@@ -121,9 +121,9 @@ involves no host object and no GraalVM context. A member the stub answers
 may still be completely unreachable in-game. The real gate for API *shape*
 is the sandbox test in the `opal` client repo, which evals through a live
 Graal context against real host objects under the actual `HostAccess.EXPLICIT`
-policy. The stub models the real contract — collections are `ScriptList`-shaped,
-there are no bean properties, and reading an unexported member throws — but
-that only narrows the gap, it does not close it. When you add a script,
+policy. The stub models the real contract: collections are `ScriptList`-shaped,
+there are no bean properties, and reading an unexported member throws. That
+only narrows the gap, it does not close it. When you add a script,
 check the method you are calling against
 [`packages/opal-types`](packages/opal-types/opal-globals.d.ts) (the
 canonical ambient types, jsdoc'd per member) and the client's own in-app
@@ -133,29 +133,16 @@ scripting documentation, not against the stub's behavior alone.
 
 **[Chomp](scripts/chomp/)** is the flagship: a full roguelite arcade
 micro-game (rounds, perks, elites, mutators, meta progression) that doubles
-as a teaching example for every scripting surface at once, backed by a
+as a teaching example for every scripting surface, backed by a
 deterministic 326-check test harness. See its own
 [README](scripts/chomp/README.md) for controls and systems.
 
 | ID | Name | Category | What it does |
 |---|---|---|---|
-| [`auto-tool-switcher`](scripts/auto-tool-switcher/) | Auto Tool Switcher | character | Switches to the best hotbar tool for the block you're roughly facing. |
 | [`chomp`](scripts/chomp/) | Chomp ★ | ui | Roguelite arcade micro-game for the command palette. |
-| [`combat-hud`](scripts/combat-hud/) | Combat HUD | combo | Nearest-target ESP box, distance/FOV gauge, and a self crit/weapon status row. |
-| [`day-cycle-clock`](scripts/day-cycle-clock/) | Day Cycle Clock | world | Dynamic Island showing the in-game clock and day/night progress. |
-| [`fall-warning`](scripts/fall-warning/) | Fall Warning | character | Warns before a fall lands if the estimated damage looks dangerous. |
-| [`ground-scanner`](scripts/ground-scanner/) | Ground Scanner | combo | Shows how many blocks of empty space are directly below you. |
-| [`hud-panel-showcase`](scripts/hud-panel-showcase/) | HUD Panel Showcase | ui | A single HUD card that showcases the renderer proxy's shapes, gradients, and path API. |
-| [`look-assist`](scripts/look-assist/) | Look Assist | character | Smoothly turns toward the nearest living entity in range and FOV. |
 | [`milestone-toasts`](scripts/milestone-toasts/) | Milestone Toasts | core | Pops a toast for fall survival, low/full health, and sprint streaks. |
-| [`module-guard`](scripts/module-guard/) | Module Guard | core | Disables a movement/exploit module whenever a chosen combat module is active. |
-| [`name-tag-esp`](scripts/name-tag-esp/) | Name Tag ESP | world | Floating name/distance tags above nearby living entities. |
 | [`packet-no-fall`](scripts/packet-no-fall/) | Packet No Fall | character | Spoofs `onGround` in the movement packet while falling, so the server never sees a fall landing. |
-| [`potion-alert`](scripts/potion-alert/) | Potion Alert | character | Your active effects, plus a heads-up when a nearby player is potted. |
 | [`reaction-tester`](scripts/reaction-tester/) | Reaction Tester | ui | A reflex-timing mini-game hosted in the command palette. |
-| [`session-island`](scripts/session-island/) | Session Island | core | Dynamic Island showing session time and live enabled-module count. |
-| [`sprint-speed-hud`](scripts/sprint-speed-hud/) | Sprint Speed HUD | character | Corner HUD panel: live speed number, sprint indicator, and a sparkline history. |
-| [`stats-dashboard`](scripts/stats-dashboard/) | Stats Dashboard | ui | Live health/position/FPS/speed dashboard hosted in the command palette. |
 
 ## For AI agents
 

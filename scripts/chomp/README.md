@@ -1,7 +1,7 @@
 # Chomp
 
 A roguelite arcade micro-game that runs entirely inside Opal — no new client
-APIs, no assets, one self-contained script. Steer a chomper through a fresh maze
+APIs, no assets, one self-contained bundle. Steer a chomper through a fresh maze
 every round, hoover up the pellets, dodge (or, when the power pellet pops, eat)
 the ghosts, then draft a perk and dive into the next, faster maze.
 
@@ -12,10 +12,13 @@ It plays in two places from one shared engine:
 - **Fullscreen overlay module** — enable the **Chomp** module to play over the
   HUD; it draws on the screen render pass and steers from key-press events.
 
-It doubles as the flagship teaching example for the scripting APIs: all copy
-lives in one `TEXT` table, all per-round tuning in `difficulty()`, and all colour
-in the `THEMES` set, so the source reads as a catalogue of the `palette`,
-`renderer`, and `storage` APIs rather than a tangle.
+It doubles as the flagship teaching example for the scripting APIs. The source
+is a small TypeScript project — an engine under `src/engine/` (grid, movement,
+RNG, storage, VFX) and the game on top under `src/game/`, with `src/main.ts` as
+the entry — that esbuild bundles into a single `dist/chomp.js`. All copy lives in
+one `TEXT` table, all per-round tuning in `difficulty()`, and all colour in the
+`THEMES` set (all three in `src/game/config.ts`), so the code reads as a
+catalogue of the `palette`, `renderer`, and `storage` APIs rather than a tangle.
 
 ## Controls
 
@@ -67,17 +70,20 @@ unavailable the game runs fine, session-only, and writes nothing.
 
 ## Testing
 
-`tests/harness.js` is a deterministic plain-script harness — **326 checks** —
-that boots the engine outside the client against `@opal-scripts/stub` with a
-frozen clock and seeded `Math.random`, so its output is identical run to run. It
-covers 300 seeded mazes (reachability, mirror symmetry, pellet floors, power
-pellets), engine liveness, the difficulty curve, pickups, elites, mutators,
-drafts, meta persistence, and a multi-seed stress run — plus four permanent
-source-audit gates (no banned strings, storage stays behind the wrapper, the
-difficulty curve is written once, no raw hex colour reaches a draw call).
+`tests/harness.js` is a deterministic harness (**326 checks**) that evals the
+built `dist/chomp.js` bundle outside the client against `@opal-scripts/stub`
+with a frozen clock and seeded `Math.random`, so its output is identical run to
+run. It covers 300 seeded mazes (reachability, mirror symmetry, pellet floors,
+power pellets), engine liveness, the difficulty curve, pickups, elites,
+mutators, drafts, meta persistence, and a multi-seed stress run — plus four
+permanent source-audit gates (no banned strings, storage stays behind the
+wrapper, the difficulty curve is written once, no raw hex colour reaches a draw
+call).
+
+The harness reads the built bundle, so run the build first:
 
 ```bash
-bun run test chomp
+bun run build chomp && bun run test chomp
 ```
 
 It proves engine correctness only, never sandbox reachability — that gate lives

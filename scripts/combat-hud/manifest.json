@@ -1,9 +1,0 @@
-{
-    "id": "combat-hud",
-    "name": "Combat HUD",
-    "version": "1.0.0",
-    "authors": ["Opal"],
-    "description": "Nearest-target ESP box, distance/FOV gauge, and a self crit/weapon status row.",
-    "category": "combo",
-    "entry": "src/CombatHud.js"
-}

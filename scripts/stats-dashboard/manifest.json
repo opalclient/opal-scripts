@@ -1,9 +1,0 @@
-{
-    "id": "stats-dashboard",
-    "name": "Stats Dashboard",
-    "version": "1.0.0",
-    "authors": ["Opal"],
-    "description": "Live health/position/FPS/speed dashboard hosted in the command palette.",
-    "category": "ui",
-    "entry": "src/StatsDashboard.js"
-}

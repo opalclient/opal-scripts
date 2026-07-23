@@ -5,6 +5,7 @@
             "tools/**",
             "packages/**",
             "template/**",
+            "scripts/chomp/src/**",
             "!**/*.d.ts",
             "!**/*.json",
             "!**/dist",

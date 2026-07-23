@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.0] — 2026-07-22
+
 ### Added
 
 - **`scripts/chomp/` (v1.1.0)** — Chomp lands as the flagship script: a
@@ -38,6 +40,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **BREAKING (source layout): `scripts/chomp/` is now a TypeScript engine +
+  game project (v1.2.0).** The single `src/Chomp.js` is gone; the source lives
+  under `src/engine/` (grid, movement, RNG, storage, VFX) and `src/game/`, with
+  `src/main.ts` as the manifest entry, esbuild-bundled to `dist/chomp.js`.
+  Gameplay is identical — the 326-check `tests/harness.js` runs against the
+  built bundle and passes unchanged (`bun run build chomp && bun run test
+  chomp`).
 - **BREAKING: repository restructured into a bun workspace, one folder per
   script.** The old `character/ combo/ core/ ui/ world/` category folders
   are gone; every script now lives at `scripts/<id>/` (`manifest.json` +
@@ -83,6 +92,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   shaped like the Java wrappers, so reading an unexported member fails
   loudly instead of answering `undefined`. See README.md for why a green
   run here still proves nothing about a sandbox denial.
+
+### Removed
+
+- **BREAKING: gallery trimmed to a flagship set of 4** — `chomp`,
+  `reaction-tester`, `milestone-toasts`, `packet-no-fall`. The other 13
+  script folders are gone: `auto-tool-switcher`, `combat-hud`,
+  `day-cycle-clock`, `fall-warning`, `ground-scanner`, `hud-panel-showcase`,
+  `look-assist`, `module-guard`, `name-tag-esp`, `potion-alert`,
+  `session-island`, `sprint-speed-hud`, `stats-dashboard`. The template now
+  owns the teaching role — copy it to learn the patterns instead of reading
+  a gallery script built to demonstrate one API surface. README.md and
+  llms.txt updated to the 4-row table.
 
 ### Fixed
 

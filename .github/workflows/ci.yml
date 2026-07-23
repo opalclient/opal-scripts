@@ -15,6 +15,17 @@
 #   6. check:template — build + typecheck + test the template scaffold
 #                   end to end, the same single command a template/ change
 #                   should stay green under (see template/README.md)
+#   7. gate summary — on PRs only: upserts one sticky comment (marker
+#                   `<!-- gate-summary -->`) with a pass/fail/skipped table
+#                   built from the outcome of steps 1-6 above. Runs with
+#                   `if: always()` so it still posts after an earlier gate
+#                   fails. Needs `pull-requests: write`, which forked PRs
+#                   never actually get (GITHUB_TOKEN is read-only there
+#                   regardless of this permissions block) — the same-repo
+#                   condition plus continue-on-error just keeps that
+#                   expected failure from being noisy. The gates themselves
+#                   (steps 1-6) are unaffected either way; this step only
+#                   ever adds a comment, never a check result.
 name: ci
 
 on:
@@ -29,6 +40,9 @@ permissions:
 jobs:
   ci:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
     steps:
       - uses: actions/checkout@v4
 
@@ -40,12 +54,15 @@ jobs:
         run: bun install --frozen-lockfile
 
       - name: Validate manifests + publish-safety
+        id: validate
         run: bun run validate
 
       - name: Lint
+        id: lint
         run: bun run lint
 
       - name: Typecheck every tsconfig in the repo
+        id: typecheck
         run: |
           set -euo pipefail
           bunx tsc --noEmit -p template
@@ -56,10 +73,71 @@ jobs:
           done < <(find scripts -mindepth 2 -maxdepth 2 -name tsconfig.json -print0)
 
       - name: Build every script bundle
+        id: build
         run: bun run build
 
       - name: Run every script's test suite
+        id: test
         run: bun run test
 
       - name: Verify the template scaffold end to end
+        id: check-template
         run: bun run check:template
+
+      - name: Post sticky gate-summary comment
+        if: always() && github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
+        continue-on-error: true
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const marker = "<!-- gate-summary -->";
+            const gates = [
+              { label: "validate (manifest + publish-safety)", outcome: "${{ steps.validate.outcome }}" },
+              { label: "lint (Biome)", outcome: "${{ steps.lint.outcome }}" },
+              { label: "typecheck", outcome: "${{ steps.typecheck.outcome }}" },
+              { label: "build", outcome: "${{ steps.build.outcome }}" },
+              { label: "test", outcome: "${{ steps.test.outcome }}" },
+              { label: "check:template", outcome: "${{ steps.check-template.outcome }}" },
+            ];
+
+            const icon = (outcome) => {
+              if (outcome === "success") return "pass";
+              if (outcome === "skipped") return "skipped";
+              if (outcome === "cancelled") return "cancelled";
+              return "FAIL";
+            };
+
+            const rows = gates.map((g) => `| ${g.label} | ${icon(g.outcome)} |`).join("\n");
+            const body = [
+              marker,
+              "### CI gate summary",
+              "",
+              "| Gate | Result |",
+              "| --- | --- |",
+              rows,
+              "",
+              "Summary only — merge still needs every required check green plus a CODEOWNERS review.",
+            ].join("\n");
+
+            const comments = await github.paginate(github.rest.issues.listComments, {
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+            const existing = comments.find((c) => c.body && c.body.includes(marker));
+
+            if (existing) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: existing.id,
+                body,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body,
+              });
+            }

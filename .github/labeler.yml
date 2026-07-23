@@ -1,0 +1,37 @@
+# actions/labeler v5 config, applied by .github/workflows/label.yml on
+# pull_request_target. That trigger always evaluates this file from main —
+# never from the fork/branch the PR is proposing — which is what keeps the
+# workflow safe to run without checking out PR code.
+#
+# v5 only classifies by changed-file globs. It has no way to tell "a brand
+# new scripts/<id>/ folder" apart from "an edit to an existing one" — that
+# needs a diff against main's existing script list, which is a scripting
+# problem, not something a labeler config can express. Rather than fake that
+# distinction, every scripts/** change gets one `script` label; the PR
+# template's New script?/Update? section is where that split actually lives.
+
+script:
+  - changed-files:
+      - any-glob-to-any-file: "scripts/**"
+
+packages:
+  - changed-files:
+      - any-glob-to-any-file: "packages/**"
+
+tooling:
+  - changed-files:
+      - any-glob-to-any-file: "tools/**"
+
+template:
+  - changed-files:
+      - any-glob-to-any-file: "template/**"
+
+ci:
+  - changed-files:
+      - any-glob-to-any-file: ".github/**"
+
+docs:
+  - changed-files:
+      - any-glob-to-any-file:
+          - "**/*.md"
+          - "llms.txt"

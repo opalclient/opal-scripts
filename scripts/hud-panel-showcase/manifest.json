@@ -1,9 +1,0 @@
-{
-    "id": "hud-panel-showcase",
-    "name": "HUD Panel Showcase",
-    "version": "1.0.0",
-    "authors": ["Opal"],
-    "description": "A single HUD card that showcases the renderer proxy's shapes, gradients, and path API.",
-    "category": "ui",
-    "entry": "src/HudPanelShowcase.js"
-}

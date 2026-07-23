@@ -4,16 +4,24 @@
 //
 //  Ports the original in-client harness onto @opal-scripts/stub: rather than
 //  hand-rolling the script globals, it builds one stub (with the text-width
-//  heuristic Chomp's layout math relies on), reads Chomp.js, and evalScripts
-//  it. evalScript installs the globals, sets globalThis.__CHOMP_TEST__, freezes
-//  Date.now, and seeds Math.random (mulberry32 — the same recipe and seed the
-//  script uses) so this whole file replays identically run to run. It then
+//  heuristic Chomp's layout math relies on), reads the BUILT BUNDLE, and
+//  evalScripts it. evalScript installs the globals, sets globalThis.__CHOMP_TEST__,
+//  freezes Date.now, and seeds Math.random (mulberry32 — the same recipe and seed
+//  the script uses) so this whole file replays identically run to run. It then
 //  drives the exposed { createGame, generateMaze, THEMES, mulberry32,
 //  difficulty } hook. This is NOT a faithful client: it proves maze-gen and
 //  engine liveness only, never sandbox reachability — that gate is
 //  ScriptRepositorySandboxTest in the client repo.
 //
-//  Run:  node harness.js   (or: bun run test chomp)
+//  BUILD BEFORE TEST. Chomp is a TypeScript engine + game project under src/;
+//  esbuild bundles src/main.ts into dist/chomp.js, which is what this harness
+//  evals. Run the build first:
+//
+//      bun run build chomp && bun run test chomp
+//
+//  (CI runs the build step before the test step, so it is covered there too.)
+//
+//  Run:  bun run build chomp && node harness.js   (or: bun run test chomp)
 // =============================================================================
 
 "use strict";
@@ -34,15 +42,21 @@ const CENTER_COL = 9;
 // return width ≈ len·size·0.5, which Chomp's layout math relies on. evalScript
 // installs the globals, engages the frozen clock (Date.now → 1750000000000) and
 // the seeded Math.random (mulberry32, seed 0x1a2b3c4d — the exact recipe the
-// script uses), sets globalThis.__CHOMP_TEST__, and evals the file. Determinism
-// stays engaged so the tests below drive gameplay against a fixed stream; this
-// file restores the real clock/random at its end (see @opal-scripts/stub's
-// header). `source` is read separately for the grep gates and the storage-absent
-// re-eval (Test 21) — that path must bypass evalScript, which reinstalls storage.
+// script uses), sets globalThis.__CHOMP_TEST__, and evals the BUILT BUNDLE (one
+// esbuild IIFE over src/main.ts) — which self-registers globalThis.__chomp_test.
+// Determinism stays engaged so the tests below drive gameplay against a fixed
+// stream; this file restores the real clock/random at its end (see the stub
+// header). `source` (the bundle text) is read separately for the storage-absent
+// re-eval (Test 21) — that path bypasses evalScript, which reinstalls storage.
+// The grep gates read the TypeScript sources under src/ directly (see below).
 const stub = createOpalStub({ textWidthHeuristic: true });
-const CHOMP_PATH = path.join(__dirname, "..", "src", "Chomp.js");
-const source = fs.readFileSync(CHOMP_PATH, "utf8");
-stub.evalScript(CHOMP_PATH);
+const BUNDLE_PATH = path.join(__dirname, "..", "dist", "chomp.js");
+if (!fs.existsSync(BUNDLE_PATH)) {
+    console.error(`missing ${path.relative(process.cwd(), BUNDLE_PATH)} — build first: bun run build chomp`);
+    process.exit(1);
+}
+const source = fs.readFileSync(BUNDLE_PATH, "utf8");
+stub.evalScript(BUNDLE_PATH);
 
 const { createGame, generateMaze, THEMES, mulberry32, difficulty } = globalThis.__chomp_test;
 const T = globalThis.__chomp_test; // engine views: grid(), pelletsLeft(), isWall, DIRS, themeName()
@@ -1155,40 +1169,68 @@ let gateSummary = [];
     }
 }
 
-// Grep gates — read the Chomp.js source and regex-assert the invariants that keep
-// the file honest. Encoded here so they hold permanently, not just at review time.
+// Grep gates — walk src/**/*.ts and regex-assert the invariants that keep the
+// split honest across every module. Encoded here so they hold permanently, not
+// just at review time (each would fail on a planted violation).
 {
-    // Code with comments stripped: the storage/difficulty/color shape-gates assert
-    // against real code, so the extensive PROSE about the storage global (which the
-    // wrapper comment quite rightly explains) doesn't count as a reference.
-    const code = source.replace(/\/\*[\s\S]*?\*\//g, "").replace(/\/\/.*$/gm, "");
+    // Collect every TypeScript source file under src/.
+    const SRC_DIR = path.join(__dirname, "..", "src");
+    const walkTs = (dir) => {
+        const out = [];
+        for (const ent of fs.readdirSync(dir, { withFileTypes: true })) {
+            const p = path.join(dir, ent.name);
+            if (ent.isDirectory()) out.push(...walkTs(p));
+            else if (ent.name.endsWith(".ts")) out.push(p);
+        }
+        return out;
+    };
+    const tsFiles = walkTs(SRC_DIR).map((p) => ({
+        rel: path.relative(SRC_DIR, p).replace(/\\/g, "/"),
+        text: fs.readFileSync(p, "utf8"),
+    }));
+    const stripComments = (s) => s.replace(/\/\*[\s\S]*?\*\//g, "").replace(/\/\/.*$/gm, "");
+    // Strip string / template literals too, so a module specifier like
+    // "../engine/storage" is not miscounted as a use of the `storage` global.
+    const stripStrings = (s) =>
+        s
+            .replace(/"(?:[^"\\]|\\.)*"/g, '""')
+            .replace(/'(?:[^'\\]|\\.)*'/g, "''")
+            .replace(/`(?:[^`\\]|\\.)*`/g, "``");
+    const allRaw = tsFiles.map((f) => f.text).join("\n"); // untouched (banned-string scan)
+    const allCode = tsFiles.map((f) => stripComments(f.text)).join("\n"); // comments gone
+    const allBare = tsFiles.map((f) => stripStrings(stripComments(f.text))).join("\n"); // + strings gone
 
     // Gate 1 — banned strings: zero pacman / pac-man / standalone `pac` token,
-    // ANYWHERE (comments included — the rename must be total).
-    const banned = source.match(/pac-?man|\bpac\b/gi) || [];
+    // ANYWHERE across src (comments included — the rename must be total).
+    const banned = allRaw.match(/pac-?man|\bpac\b/gi) || [];
     if (banned.length !== 0) fail(`grep gate (banned strings): ${banned.length} hit(s) [${banned.join(",")}]`);
     else {
         auditChecks++;
         gateSummary.push("banned 0");
     }
 
-    // Gate 2 — storage encapsulation: the raw `storage` global is touched only by
-    // the feature-detect (two refs on one line), and the store accessor appears once
-    // each in loadJson / saveJson. Everything else reads/writes through `store`.
-    const rawStorage = (code.match(/\bstorage\b/g) || []).length;
-    const getN = (code.match(/store\.get\(/g) || []).length;
-    const setN = (code.match(/store\.set\(/g) || []).length;
-    if (rawStorage !== 2) fail(`grep gate (storage): raw storage refs ${rawStorage}, expected 2 (feature-detect only)`);
-    else if (getN !== 1 || setN !== 1) fail(`grep gate (storage): store.get ${getN} / store.set ${setN}, expected 1 / 1`);
-    else {
+    // Gate 2 — storage encapsulation: the raw `storage` global is touched ONLY by
+    // engine/storage.ts's feature-detect (two refs on one line), and store.get /
+    // store.set appear once each across all of src. Everything else goes through `store`.
+    const storageFile = tsFiles.find((f) => f.rel === "engine/storage.ts");
+    const rawStorage = (allBare.match(/\bstorage\b/g) || []).length;
+    const inStorage = storageFile ? (stripStrings(stripComments(storageFile.text)).match(/\bstorage\b/g) || []).length : 0;
+    const getN = (allBare.match(/store\.get\(/g) || []).length;
+    const setN = (allBare.match(/store\.set\(/g) || []).length;
+    if (rawStorage !== 2 || inStorage !== 2) {
+        fail(`grep gate (storage): raw storage refs ${rawStorage} (engine/storage.ts ${inStorage}), expected 2 / 2`);
+    } else if (getN !== 1 || setN !== 1) {
+        fail(`grep gate (storage): store.get ${getN} / store.set ${setN}, expected 1 / 1`);
+    } else {
         auditChecks++;
         gateSummary.push("storage-encap");
     }
 
     // Gate 3 — difficulty locality: the speed-curve magic multipliers are written in
-    // exactly one place. Every other reader folds off d.ghostSpeed / d.chompSpeed.
-    const ghostFormula = (code.match(/ghostSpeed:\s*\d/g) || []).length;
-    const chompFormula = (code.match(/chompSpeed:\s*\d/g) || []).length;
+    // exactly one place (game/config.ts's difficulty()). Every other reader folds
+    // off d.ghostSpeed / d.chompSpeed, so the literal count across src stays 1 / 1.
+    const ghostFormula = (allCode.match(/ghostSpeed:\s*\d/g) || []).length;
+    const chompFormula = (allCode.match(/chompSpeed:\s*\d/g) || []).length;
     if (ghostFormula !== 1 || chompFormula !== 1) fail(`grep gate (difficulty): curve-literal count ghost ${ghostFormula} / chomp ${chompFormula}, expected 1 / 1`);
     else {
         auditChecks++;
@@ -1196,9 +1238,9 @@ let gateSummary = [];
     }
 
     // Gate 4 — color locality: no raw hex color literal ever reaches a renderer draw
-    // call; colors come only through theme.* / renderer.color()/withAlpha()/… .
+    // call anywhere in src; colors come only through theme.* / renderer.color()/… .
     let hexOnDraw = 0;
-    code.split("\n").forEach((ln) => {
+    allCode.split("\n").forEach((ln) => {
         if (/renderer\.(rect|roundedRect|roundedRectVarying|circle|text|strokeColor|shadow)\b/.test(ln) && /0x[0-9a-fA-F]{5,}/.test(ln)) hexOnDraw++;
     });
     if (hexOnDraw !== 0) fail(`grep gate (colors): ${hexOnDraw} renderer draw line(s) carry a raw hex color`);

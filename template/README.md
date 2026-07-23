@@ -2,7 +2,7 @@
 
 Copy this whole folder to start a new Opal script written in TypeScript,
 type-checked against `@opal-scripts/opal-types` and bundled with the rest of
-this repo's tooling. (Prefer plain JavaScript? Copy any `scripts/<id>/` folder
+this repo's tooling. (Prefer plain JavaScript? Copy `scripts/milestone-toasts/`
 instead and drop the `tsconfig.json` — the build/test tools work with either.)
 
 ## Quickstart
