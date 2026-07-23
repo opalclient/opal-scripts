@@ -3,7 +3,7 @@
 ## Reporting a vulnerability
 
 **Do not open a public issue for a security vulnerability.** Report it
-privately via [Opal's private security advisory](https://github.com/opalclient/opal-scripts/security/advisories/new)
+privately via [Opal's private security advisory](https://github.com/opalclient/scripts/security/advisories/new)
 for this repository. If advisories are unavailable, use the private contact in
 the org's support channel.
 
@@ -12,9 +12,13 @@ at the provider immediately, then let us know so we can help.
 
 ## What counts as a vulnerability here
 
-This repo is a **static gallery of example `.js` scripts** for Opal's
-GraalVM scripting engine. There is no server, no build pipeline, and no
-credential handling of its own, so the relevant reports are:
+This repo is a **static gallery of example scripts** for Opal's GraalVM
+scripting engine. There is no server and no credential handling of its own.
+It does have a build pipeline — a bun workspace that esbuild-bundles each
+`scripts/<id>/` folder to a single IIFE, gated by CI (validate, lint,
+typecheck, build, test) on every pull request — but that pipeline only
+produces the same plain `.js` a script author could hand-write; it does not
+change the trust model below. The relevant reports are:
 
 - A script in this gallery that does something its header/description does
   not disclose (hidden network calls, credential harvesting, obfuscated
@@ -22,8 +26,9 @@ credential handling of its own, so the relevant reports are:
   running it).
 - A documented API pattern in a script here that is actually unsafe or
   misleading in a way that could cause a downstream user harm if copied.
-- A dependency CVE in the optional lint tooling (if a `package.json` is
-  ever added) that affects contributors.
+- A dependency CVE in the workspace's own tooling deps (`@biomejs/biome`,
+  `esbuild`, `typescript` — tracked in `bun.lock`) that affects contributors
+  running these scripts locally.
 - A **sandbox escape** — a script reaching a host member, a class, or the
   filesystem that the policy below is supposed to deny. That is a bug in the
   engine rather than in this gallery, so report it against Opal itself, but
@@ -66,8 +71,10 @@ faster.
 
 ## Supported versions
 
-This repo does not use semantic versioning per script; treat the `main`
-branch as the only supported version.
+Each `scripts/<id>/manifest.json` carries its own semver `version`, and a
+release tags that exact `<id>@<version>` pair (see
+`.github/workflows/release.yml`). Beyond the latest tagged release per
+script, treat the `main` branch as the only supported version.
 
 | Version | Supported |
 |---------|-----------|

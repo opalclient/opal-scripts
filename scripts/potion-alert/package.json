@@ -1,0 +1,8 @@
+{
+    "name": "@opal-scripts/potion-alert",
+    "version": "0.0.0",
+    "private": true,
+    "dependencies": {
+        "@opal-scripts/stub": "workspace:*"
+    }
+}

@@ -1,0 +1,9 @@
+{
+    "id": "reaction-tester",
+    "name": "Reaction Tester",
+    "version": "1.0.0",
+    "authors": ["Opal"],
+    "description": "A reflex-timing mini-game hosted in the command palette.",
+    "category": "ui",
+    "entry": "src/ReactionTester.js"
+}

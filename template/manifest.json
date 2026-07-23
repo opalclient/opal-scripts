@@ -1,0 +1,9 @@
+{
+    "id": "template",
+    "name": "My Script",
+    "version": "0.1.0",
+    "authors": ["you"],
+    "description": "Starting point for a new Opal script - copy this folder, rename the manifest, and edit src/main.ts.",
+    "category": "ui",
+    "entry": "src/main.ts"
+}

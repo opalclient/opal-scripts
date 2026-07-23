@@ -1,51 +1,48 @@
-# opal-scripts
+# scripts
 
-> A curated gallery of example scripts for Opal's GraalVM JavaScript
-> scripting engine — real, runnable, well-commented `.js` files organized by
-> which proxy API they demonstrate.
+> The official public home of Opal scripts — a curated gallery, a
+> TypeScript template, and a CI-gated contribution pipeline. One folder per
+> script under `scripts/<id>/`; canonical API typings and a shared test stub
+> live in `packages/`; `template/` is the copy-to-start scaffold.
 
-Use raw/permalink URLs (`https://raw.githubusercontent.com/opalclient/opal-scripts/main/<path>`)
+Use raw/permalink URLs (`https://raw.githubusercontent.com/opalclient/scripts/main/<path>`)
 so a fetcher gets file content, not a rendered page.
 
 ## Docs
 
-- [README](https://raw.githubusercontent.com/opalclient/opal-scripts/main/README.md): Overview, install instructions, categorized script index.
-- [CLAUDE.md](https://raw.githubusercontent.com/opalclient/opal-scripts/main/CLAUDE.md): AI guide — mental model, patterns, pitfalls.
-- [CONTRIBUTING.md](https://raw.githubusercontent.com/opalclient/opal-scripts/main/CONTRIBUTING.md): How to add a script, PR workflow, commit policy.
-- [SECURITY.md](https://raw.githubusercontent.com/opalclient/opal-scripts/main/SECURITY.md): Vulnerability reporting.
-- [CHANGELOG.md](https://raw.githubusercontent.com/opalclient/opal-scripts/main/CHANGELOG.md): Released and unreleased changes.
+- [README](https://raw.githubusercontent.com/opalclient/scripts/main/README.md): Overview, layout, install/create-a-script instructions, CI gates, full script table.
+- [CLAUDE.md](https://raw.githubusercontent.com/opalclient/scripts/main/CLAUDE.md): AI guide — mental model, manifest schema, tools, test isolation model, pitfalls.
+- [CONTRIBUTING.md](https://raw.githubusercontent.com/opalclient/scripts/main/CONTRIBUTING.md): How to add a script, PR workflow, review criteria, commit policy.
+- [SECURITY.md](https://raw.githubusercontent.com/opalclient/scripts/main/SECURITY.md): Sandbox model and vulnerability reporting.
+- [CHANGELOG.md](https://raw.githubusercontent.com/opalclient/scripts/main/CHANGELOG.md): Released and unreleased changes.
 
-## Examples — core/ (client, notification, overlay, modules proxies)
+## Shared packages
 
-- [MilestoneToasts.js](https://raw.githubusercontent.com/opalclient/opal-scripts/main/core/MilestoneToasts.js): Edge-triggered toast notifications for fall survival, low/full health, and sprint streaks.
-- [SessionIsland.js](https://raw.githubusercontent.com/opalclient/opal-scripts/main/core/SessionIsland.js): Dynamic Island showing session playtime and live enabled-module count.
-- [ModuleGuard.js](https://raw.githubusercontent.com/opalclient/opal-scripts/main/core/ModuleGuard.js): Configurable "disable Guard module while Watch module is active" pattern with auto-restore.
+- [opal-globals.d.ts](https://raw.githubusercontent.com/opalclient/scripts/main/packages/opal-types/opal-globals.d.ts): Canonical ambient type definitions for every scripting proxy global, including `storage`.
+- [packages/stub/index.js](https://raw.githubusercontent.com/opalclient/scripts/main/packages/stub/index.js): `createOpalStub()` — the shared sandbox stub every script's tests run against.
+- [template/](https://raw.githubusercontent.com/opalclient/scripts/main/template/src/main.ts): Copy-to-start TypeScript scaffold — a minimal typed script with settings, rendering, and `storage`.
 
-## Examples — character/ (player, movement, rotation, inventory proxies)
+## Scripts (scripts/<id>/)
 
-- [AutoToolSwitcher.js](https://raw.githubusercontent.com/opalclient/opal-scripts/main/character/AutoToolSwitcher.js): Best-tool hotbar switching using a facing heuristic (documents why a real raycast isn't reachable from script-land).
-- [SprintSpeedHud.js](https://raw.githubusercontent.com/opalclient/opal-scripts/main/character/SprintSpeedHud.js): Corner HUD with live speed number, sprint dot, and a fixed-timestep sparkline.
-- [LookAssist.js](https://raw.githubusercontent.com/opalclient/opal-scripts/main/character/LookAssist.js): Smooth-look at the nearest living entity in FOV, composing the rotation anti-detection helpers.
-- [FallWarning.js](https://raw.githubusercontent.com/opalclient/opal-scripts/main/character/FallWarning.js): Pre-landing fall-damage warning with an approximate damage estimate and screen-edge flash.
-- [PacketNoFall.js](https://raw.githubusercontent.com/opalclient/opal-scripts/main/character/PacketNoFall.js): Rewrites the movement packet's onGround flag while falling (packet scripting API), rate-limited with `timer`.
-
-## Examples — world/ (world, esp proxies)
-
-- [NameTagEsp.js](https://raw.githubusercontent.com/opalclient/opal-scripts/main/world/NameTagEsp.js): Floating nameplate-pill ESP tags that fade by distance.
-- [DayCycleClock.js](https://raw.githubusercontent.com/opalclient/opal-scripts/main/world/DayCycleClock.js): Dynamic Island clock converting world.getTimeOfDay() ticks into a real 24h/12h time with a day/night gradient bar.
-
-## Examples — ui/ (renderer, palette proxies)
-
-- [HudPanelShowcase.js](https://raw.githubusercontent.com/opalclient/opal-scripts/main/ui/HudPanelShowcase.js): Pure renderer showcase — gradients, Path API, composite glow/shadow/blur effects, color helpers.
-- [ReactionTester.js](https://raw.githubusercontent.com/opalclient/opal-scripts/main/ui/ReactionTester.js): Flagship palette-view mini-app #1 — a reflex-timing reaction game.
-- [StatsDashboard.js](https://raw.githubusercontent.com/opalclient/opal-scripts/main/ui/StatsDashboard.js): Flagship palette-view mini-app #2 — a live, read-only stat-tracking dashboard.
-
-## Examples — combo/ (several proxies wired together)
-
-- [CombatHud.js](https://raw.githubusercontent.com/opalclient/opal-scripts/main/combo/CombatHud.js): esp + player + world + rotation combat-awareness HUD; explains the missing target-health API.
-- [GroundScanner.js](https://raw.githubusercontent.com/opalclient/opal-scripts/main/combo/GroundScanner.js): world + player + renderer + notification vertical ground-gap scanner using BlockPos arithmetic.
+- [`chomp`](https://raw.githubusercontent.com/opalclient/scripts/main/scripts/chomp/src/Chomp.js) ★ flagship (ui): Roguelite arcade micro-game for the command palette — rounds, perks, elites, mutators, meta progression, backed by a 326-check deterministic test harness.
+- [`auto-tool-switcher`](https://raw.githubusercontent.com/opalclient/scripts/main/scripts/auto-tool-switcher/src/AutoToolSwitcher.js) (character): Best-tool hotbar switching using a facing heuristic.
+- [`combat-hud`](https://raw.githubusercontent.com/opalclient/scripts/main/scripts/combat-hud/src/CombatHud.js) (combo): esp + player + world + rotation combat-awareness HUD, with a target health bar.
+- [`day-cycle-clock`](https://raw.githubusercontent.com/opalclient/scripts/main/scripts/day-cycle-clock/src/DayCycleClock.js) (world): Dynamic Island clock converting `world.getTimeOfDay()` ticks into real time, with a day/night gradient bar.
+- [`fall-warning`](https://raw.githubusercontent.com/opalclient/scripts/main/scripts/fall-warning/src/FallWarning.js) (character): Pre-landing fall-damage warning with an approximate damage estimate and screen-edge flash.
+- [`ground-scanner`](https://raw.githubusercontent.com/opalclient/scripts/main/scripts/ground-scanner/src/GroundScanner.js) (combo): Vertical ground-gap scanner using `BlockPos` arithmetic.
+- [`hud-panel-showcase`](https://raw.githubusercontent.com/opalclient/scripts/main/scripts/hud-panel-showcase/src/HudPanelShowcase.js) (ui): Pure renderer showcase — gradients, Path API, composite glow/shadow/blur effects, color helpers.
+- [`look-assist`](https://raw.githubusercontent.com/opalclient/scripts/main/scripts/look-assist/src/LookAssist.js) (character): Smooth-look at the nearest living entity in FOV, composing the rotation anti-detection helpers.
+- [`milestone-toasts`](https://raw.githubusercontent.com/opalclient/scripts/main/scripts/milestone-toasts/src/MilestoneToasts.js) (core): Edge-triggered toast notifications for fall survival, low/full health, and sprint streaks.
+- [`module-guard`](https://raw.githubusercontent.com/opalclient/scripts/main/scripts/module-guard/src/ModuleGuard.js) (core): Configurable "disable Guard module while Watch module is active" pattern with auto-restore.
+- [`name-tag-esp`](https://raw.githubusercontent.com/opalclient/scripts/main/scripts/name-tag-esp/src/NameTagEsp.js) (world): Floating nameplate-pill ESP tags that fade by distance.
+- [`packet-no-fall`](https://raw.githubusercontent.com/opalclient/scripts/main/scripts/packet-no-fall/src/PacketNoFall.js) (character): Rewrites the movement packet's `onGround` flag while falling, rate-limited with `timer`.
+- [`potion-alert`](https://raw.githubusercontent.com/opalclient/scripts/main/scripts/potion-alert/src/PotionAlert.js) (character): Active effects as a HUD column with expiry warnings, plus a nearby-combat-buff scan.
+- [`reaction-tester`](https://raw.githubusercontent.com/opalclient/scripts/main/scripts/reaction-tester/src/ReactionTester.js) (ui): A reflex-timing mini-game hosted in the command palette.
+- [`session-island`](https://raw.githubusercontent.com/opalclient/scripts/main/scripts/session-island/src/SessionIsland.js) (core): Dynamic Island showing session playtime and live enabled-module count.
+- [`sprint-speed-hud`](https://raw.githubusercontent.com/opalclient/scripts/main/scripts/sprint-speed-hud/src/SprintSpeedHud.js) (character): Corner HUD with live speed number, sprint dot, and a fixed-timestep sparkline.
+- [`stats-dashboard`](https://raw.githubusercontent.com/opalclient/scripts/main/scripts/stats-dashboard/src/StatsDashboard.js) (ui): Live, read-only stat-tracking dashboard hosted in the command palette.
 
 ## Optional
 
-- [Issues](https://github.com/opalclient/opal-scripts/issues)
-- [Discussions](https://github.com/opalclient/opal-scripts/discussions)
+- [Issues](https://github.com/opalclient/scripts/issues)
+- [Discussions](https://github.com/opalclient/scripts/discussions)

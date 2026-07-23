@@ -1,0 +1,9 @@
+{
+    "id": "fall-warning",
+    "name": "Fall Warning",
+    "version": "1.0.0",
+    "authors": ["Opal"],
+    "description": "Warns before a fall lands if the estimated damage looks dangerous.",
+    "category": "character",
+    "entry": "src/FallWarning.js"
+}

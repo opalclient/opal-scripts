@@ -1,0 +1,8 @@
+{
+    "name": "@opal-scripts/name-tag-esp",
+    "version": "0.0.0",
+    "private": true,
+    "dependencies": {
+        "@opal-scripts/stub": "workspace:*"
+    }
+}

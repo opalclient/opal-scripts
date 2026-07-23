@@ -1,0 +1,41 @@
+{
+    "$schema": "https://json.schemastore.org/tsconfig",
+    "compilerOptions": {
+        // This intentionally duplicates tsconfig.base.json's compilerOptions
+        // instead of "extends"-ing it. template/ is meant to be copied
+        // wholesale to scripts/<id>/ (see README.md) - a relative "extends"
+        // path resolves against the COPY's new location, not this one, so it
+        // breaks at any depth other than the original (reproduced: TS5083,
+        // "File '../tsconfig.base.json' not found"). Self-contained means the
+        // copied folder's tsconfig just works, unmodified. If
+        // tsconfig.base.json ever changes, mirror the change here by hand.
+        "target": "ES2022",
+        "module": "ES2022",
+        "lib": ["ES2022"],
+        "moduleResolution": "bundler",
+        "resolveJsonModule": true,
+        "allowJs": false,
+        "strict": true,
+        "esModuleInterop": true,
+        "skipLibCheck": true,
+        "forceConsistentCasingInFileNames": true,
+        "isolatedModules": true,
+        "verbatimModuleSyntax": true,
+        "noEmit": true,
+        "noUncheckedIndexedAccess": true,
+        "noImplicitReturns": true,
+        "noFallthroughCasesInSwitch": true,
+        "noUnusedLocals": true,
+        "noUnusedParameters": true,
+        // The base's "types": [] means nothing gets pulled in automatically -
+        // naming the package here is what makes opal-globals.d.ts's ambient
+        // declarations (registerScript, player, renderer, storage, keys, ...)
+        // visible without an import statement. This resolves via the
+        // workspace symlink at node_modules/@opal-scripts/opal-types, which
+        // DOES survive a copy: package resolution is name-based, not
+        // path-based, so `bun install` re-links it from the new folder once
+        // it's a workspace member (see README.md's quickstart).
+        "types": ["@opal-scripts/opal-types"]
+    },
+    "include": ["src/**/*.ts"]
+}

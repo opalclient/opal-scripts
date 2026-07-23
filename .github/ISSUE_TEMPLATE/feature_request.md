@@ -13,7 +13,8 @@ labels: ["enhancement"]
 ## Proposed approach
 
 <!-- Sketch the script: which globals/events it would use, what settings it
-     would expose, and which folder (core/character/world/ui/combo) it belongs in. -->
+     would expose, and which category (character/combo/core/ui/world) it
+     belongs in — that becomes the manifest's "category" field, not a folder. -->
 
 ## Alternatives considered
 
@@ -22,3 +23,9 @@ labels: ["enhancement"]
 ## Additional context
 
 <!-- Links to the relevant scripting docs page(s) that ground the design. -->
+
+## Submitting it yourself?
+
+If you'd like to build this rather than just propose it, see
+[CONTRIBUTING.md](https://github.com/opalclient/scripts/blob/main/CONTRIBUTING.md#adding-a-new-script)
+for the copy-the-template quickstart, manifest schema, and review criteria.
