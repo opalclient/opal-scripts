@@ -1,0 +1,76 @@
+name: Submit a script
+description: >-
+  Propose a script idea or ask a question before you build it. This is a
+  pre-PR discussion, not the submission itself — see below.
+title: "feat: "
+labels: ["script-proposal"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        **The real submission path is a pull request**, not this form — see
+        [CONTRIBUTING.md](https://github.com/opalclient/scripts/blob/main/CONTRIBUTING.md#adding-a-new-script)
+        for the copy-the-template quickstart. Use this issue to sanity-check
+        an idea, a category, or an API approach before doing the work, or to
+        point at work in progress you'd like early feedback on.
+
+  - type: input
+    id: script-name
+    attributes:
+      label: Script name
+      description: Working title / proposed `id` (kebab-case).
+      placeholder: e.g. auto-totem
+    validations:
+      required: true
+
+  - type: input
+    id: description
+    attributes:
+      label: One-line description
+      description: What does it do, in a sentence?
+      placeholder: e.g. Swaps a totem into the offhand when health drops below a threshold.
+    validations:
+      required: true
+
+  - type: dropdown
+    id: category
+    attributes:
+      label: Category
+      description: Which `manifest.json` category does this belong in?
+      options:
+        - character
+        - combo
+        - core
+        - ui
+        - world
+    validations:
+      required: true
+
+  - type: textarea
+    id: api-usage
+    attributes:
+      label: What it uses from the API
+      description: >-
+        Which proxy globals/events does this touch (mc, player, renderer,
+        storage, keys, module.on(...), ...)? See
+        https://opal.wtf/docs/scripting for the reference.
+      placeholder: e.g. player.getHealth(), renderer.color(...), module.on("tick", ...)
+    validations:
+      required: true
+
+  - type: input
+    id: fork-link
+    attributes:
+      label: Link to fork/branch (optional)
+      description: If you've already started building it, link the branch or fork here.
+      placeholder: https://github.com/<you>/scripts/tree/<branch>
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: read-contributing
+    attributes:
+      label: Contributing guide
+      options:
+        - label: I read CONTRIBUTING.md
+          required: true

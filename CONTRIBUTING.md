@@ -29,6 +29,42 @@ reference.
 | Security vulnerability | **Do not open a public issue.** See [SECURITY.md](SECURITY.md). |
 | Pull request (new script or fix) | Fork, branch off `main`, open a PR. See below. |
 
+## Your first script, start to finish
+
+The condensed version of the whole path, if you'd rather see it end to end
+before the detailed steps below:
+
+1. **Fork** the repo and clone your fork.
+2. **Copy `template/`** to `scripts/<your-id>/` — kebab-case, matching the
+   `id` you'll give it.
+3. **Rename the id everywhere**: `manifest.json`'s `id`, `package.json`'s
+   `name` (`@opal-scripts/<your-id>`), and the `registerScript({ id: ... })`
+   call in your entry file all need to match the folder name.
+4. **`bun install`** at the repo root. This links your new folder into the
+   workspace so it can see `@opal-scripts/opal-types` (ambient globals) and
+   `@opal-scripts/stub` (the test harness).
+5. **Build and test it locally**: `bun run build <your-id> && bun run test
+   <your-id>` (add `bunx tsc --noEmit -p scripts/<your-id>` if it's
+   TypeScript). Then run it in a real Opal client — see step 7 of
+   [Adding a new script](#adding-a-new-script) below.
+6. **Open the PR** using the template — keep the "New script" section, fill
+   in the gate checklist as you actually run each command.
+7. **Read the bot comment.** CI posts one sticky comment on the PR with a
+   pass/fail/skipped table for validate, lint, typecheck, build, test, and
+   check:template. An all-pass table plus green required checks means it's
+   ready for human review; a failing row tells you which local command to
+   rerun.
+8. **Review** happens against [Review criteria](#review-criteria) further
+   down — sandbox-API-only, no obfuscation, tests for nontrivial logic, an
+   accurate manifest, publish-safe.
+9. **Merge is publication.** A CODEOWNERS approval plus green CI and
+   merging to `main` is what ships the script — there's no separate publish
+   step. Tagging a release (`<id>@<version>`) to build the distributable
+   bundle happens after merge and is maintainer-side, not something a
+   contributor needs to do.
+
+The rest of this document covers each of those steps in more detail.
+
 ## Adding a new script
 
 1. **Copy `template/`** to `scripts/<your-id>/` (kebab-case, matching the
