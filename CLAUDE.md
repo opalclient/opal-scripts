@@ -102,17 +102,16 @@ off a shared engine.
 - **Edge-trigger, don't level-trigger, a tick-rate poll.** A condition
   checked 20 times a second will fire 20 toasts a second unless you track
   "have I already acted on this?" and only act on the transition. See
-  `scripts/milestone-toasts/` and `scripts/ground-scanner/`.
+  `scripts/milestone-toasts/`.
 - **A module owns what it disables.** If a module toggles a *different*
-  module off (`scripts/module-guard/`), track whether *this script* was the
-  one that turned it off before ever turning it back on — never assume
-  ownership of a setting the player controls manually.
+  module off, track whether *this script* was the one that turned it off
+  before ever turning it back on — never assume ownership of a setting the
+  player controls manually.
 - **Palette views are their own render surface.** `palette.createView({ id,
   render(x, y, w, h, dt), keyPressed, ... })` gets a `dt` that is real
   wall-clock seconds (clamped to 0.1s), not a tick. Anything time-based in a
-  palette view (`scripts/reaction-tester/`, `scripts/stats-dashboard/`,
-  `scripts/chomp/`) accumulates `dt`, it does not assume a fixed 1/20s step
-  the way `preGameTick` logic can.
+  palette view (`scripts/reaction-tester/`, `scripts/chomp/`) accumulates
+  `dt`, it does not assume a fixed 1/20s step the way `preGameTick` logic can.
 - **`storage` persists across sessions, per script.** `storage.set(key,
   value)` / `.get(key)` (returns `string | null` — `null` means never set,
   not `""`/`0`) / `.remove(key)` / `.keys()`. Storage is isolated per

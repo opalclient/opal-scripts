@@ -131,7 +131,7 @@ Every commit subject **must** follow Conventional Commits:
 `ci`, `chore`, `revert`.
 
 A new script is typically `feat(scripts): add <id>` (or a scope matching its
-category, e.g. `feat(world): add day-cycle-clock`).
+category, e.g. `feat(character): add packet-no-fall`).
 
 ### Hard rules
 

@@ -84,6 +84,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   loudly instead of answering `undefined`. See README.md for why a green
   run here still proves nothing about a sandbox denial.
 
+### Removed
+
+- **BREAKING: gallery trimmed to a flagship set of 4** — `chomp`,
+  `reaction-tester`, `milestone-toasts`, `packet-no-fall`. The other 13
+  script folders are gone: `auto-tool-switcher`, `combat-hud`,
+  `day-cycle-clock`, `fall-warning`, `ground-scanner`, `hud-panel-showcase`,
+  `look-assist`, `module-guard`, `name-tag-esp`, `potion-alert`,
+  `session-island`, `sprint-speed-hud`, `stats-dashboard`. The template now
+  owns the teaching role — copy it to learn the patterns instead of reading
+  a gallery script built to demonstrate one API surface. README.md and
+  llms.txt updated to the 4-row table.
+
 ### Fixed
 
 - `world/NameTagEsp.js` and `combo/CombatHud.js` drew nothing at all: both read

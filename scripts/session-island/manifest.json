@@ -1,9 +1,0 @@
-{
-    "id": "session-island",
-    "name": "Session Island",
-    "version": "1.0.0",
-    "authors": ["Opal"],
-    "description": "Dynamic Island showing session time and live enabled-module count.",
-    "category": "core",
-    "entry": "src/SessionIsland.js"
-}

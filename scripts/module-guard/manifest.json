@@ -1,9 +1,0 @@
-{
-    "id": "module-guard",
-    "name": "Module Guard",
-    "version": "1.0.0",
-    "authors": ["Opal"],
-    "description": "Disables a movement/exploit module whenever a chosen combat module is active.",
-    "category": "core",
-    "entry": "src/ModuleGuard.js"
-}

@@ -1,9 +1,0 @@
-{
-    "id": "ground-scanner",
-    "name": "Ground Scanner",
-    "version": "1.0.0",
-    "authors": ["Opal"],
-    "description": "Shows how many blocks of empty space are directly below you.",
-    "category": "combo",
-    "entry": "src/GroundScanner.js"
-}

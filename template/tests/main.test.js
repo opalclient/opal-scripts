@@ -1,7 +1,7 @@
 // Tests template/dist/template.js - the esbuild-BUNDLED output of
 // src/main.ts, not the TypeScript source directly. There is no `require()`
 // path for a `.ts` file the way gallery `.js` scripts get required straight
-// out of src/ (see scripts/potion-alert/tests/PotionAlert.test.js for that
+// out of src/ (see scripts/packet-no-fall/tests/PacketNoFall.test.js for that
 // pattern) - esbuild is what turns main.ts into the plain IIFE Node can
 // `eval`, the same shape the GraalVM engine evals in-game. Build first:
 //

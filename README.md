@@ -139,23 +139,10 @@ deterministic 326-check test harness. See its own
 
 | ID | Name | Category | What it does |
 |---|---|---|---|
-| [`auto-tool-switcher`](scripts/auto-tool-switcher/) | Auto Tool Switcher | character | Switches to the best hotbar tool for the block you're roughly facing. |
 | [`chomp`](scripts/chomp/) | Chomp ★ | ui | Roguelite arcade micro-game for the command palette. |
-| [`combat-hud`](scripts/combat-hud/) | Combat HUD | combo | Nearest-target ESP box, distance/FOV gauge, and a self crit/weapon status row. |
-| [`day-cycle-clock`](scripts/day-cycle-clock/) | Day Cycle Clock | world | Dynamic Island showing the in-game clock and day/night progress. |
-| [`fall-warning`](scripts/fall-warning/) | Fall Warning | character | Warns before a fall lands if the estimated damage looks dangerous. |
-| [`ground-scanner`](scripts/ground-scanner/) | Ground Scanner | combo | Shows how many blocks of empty space are directly below you. |
-| [`hud-panel-showcase`](scripts/hud-panel-showcase/) | HUD Panel Showcase | ui | A single HUD card that showcases the renderer proxy's shapes, gradients, and path API. |
-| [`look-assist`](scripts/look-assist/) | Look Assist | character | Smoothly turns toward the nearest living entity in range and FOV. |
 | [`milestone-toasts`](scripts/milestone-toasts/) | Milestone Toasts | core | Pops a toast for fall survival, low/full health, and sprint streaks. |
-| [`module-guard`](scripts/module-guard/) | Module Guard | core | Disables a movement/exploit module whenever a chosen combat module is active. |
-| [`name-tag-esp`](scripts/name-tag-esp/) | Name Tag ESP | world | Floating name/distance tags above nearby living entities. |
 | [`packet-no-fall`](scripts/packet-no-fall/) | Packet No Fall | character | Spoofs `onGround` in the movement packet while falling, so the server never sees a fall landing. |
-| [`potion-alert`](scripts/potion-alert/) | Potion Alert | character | Your active effects, plus a heads-up when a nearby player is potted. |
 | [`reaction-tester`](scripts/reaction-tester/) | Reaction Tester | ui | A reflex-timing mini-game hosted in the command palette. |
-| [`session-island`](scripts/session-island/) | Session Island | core | Dynamic Island showing session time and live enabled-module count. |
-| [`sprint-speed-hud`](scripts/sprint-speed-hud/) | Sprint Speed HUD | character | Corner HUD panel: live speed number, sprint indicator, and a sparkline history. |
-| [`stats-dashboard`](scripts/stats-dashboard/) | Stats Dashboard | ui | Live health/position/FPS/speed dashboard hosted in the command palette. |
 
 ## For AI agents
 

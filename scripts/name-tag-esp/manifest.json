@@ -1,9 +1,0 @@
-{
-    "id": "name-tag-esp",
-    "name": "Name Tag ESP",
-    "version": "1.0.0",
-    "authors": ["Opal"],
-    "description": "Floating name/distance tags above nearby living entities.",
-    "category": "world",
-    "entry": "src/NameTagEsp.js"
-}

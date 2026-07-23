@@ -1,9 +1,0 @@
-{
-    "id": "auto-tool-switcher",
-    "name": "Auto Tool Switcher",
-    "version": "1.0.0",
-    "authors": ["Opal"],
-    "description": "Switches to the best hotbar tool for the block you're roughly facing.",
-    "category": "character",
-    "entry": "src/AutoToolSwitcher.js"
-}

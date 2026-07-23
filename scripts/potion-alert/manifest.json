@@ -1,9 +1,0 @@
-{
-    "id": "potion-alert",
-    "name": "Potion Alert",
-    "version": "1.0.0",
-    "authors": ["Opal"],
-    "description": "Your active effects, plus a heads-up when a nearby player is potted.",
-    "category": "character",
-    "entry": "src/PotionAlert.js"
-}
