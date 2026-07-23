@@ -1,14 +1,41 @@
 #!/usr/bin/env node
 // Runs every scripts/<id>/tests/*.test.{mjs,js} file, or just one folder's,
-// against Node's assert-based test files (no test framework dependency).
+// each in its OWN child process (`node <file>`).
 //
 // Usage:
 //   node tools/test.mjs            run every scripts/<id>/tests/*
 //   node tools/test.mjs <id>       run just scripts/<id>/tests/*
+//
+// WHY ONE PROCESS PER FILE
+// ------------------------
+// Every gallery test installs the Opal scripting globals onto `globalThis`
+// via `createOpalStub().installGlobals()` so a script's top-level
+// `registerScript`/`module.on(...)` calls (which reference bare globals like
+// `player`/`esp`/`renderer`) resolve correctly. An earlier version of this
+// file imported every test file into ONE process. That silently broke:
+// `node:test` doesn't run a test's body until every imported file has
+// finished its synchronous top-level code, so whichever file happened to
+// import LAST overwrote every earlier file's globals before any test body
+// actually ran (confirmed by reproducing the interleave directly — reorder
+// the imported files and a *different* file's tests break). A whole-file
+// harness has even less room for another file's stub to interleave: Chomp's
+// 326-check suite (`scripts/chomp/tests/harness.js`) freezes `Date.now` and
+// seeds `Math.random` for the ENTIRE file, so any cross-file interleaving
+// would desync its deterministic playback.
+//
+// Spawning one child process per test file gives every file (and every
+// harness) its own untouched `globalThis`, `node:test` instance, and module
+// cache — the isolation the stub's "one stub per test file" contract
+// actually assumes. It also means this runner does not need to care whether
+// a file uses `node:test` (self-runs under plain `node <file>`, exit code
+// reflects pass/fail) or is a plain-script harness (prints its own summary
+// and calls `process.exit(1)` on failure) — `node <file>` runs both
+// identically; only the child's exit code matters here.
 
+import { spawnSync } from "node:child_process";
 import { existsSync, readdirSync } from "node:fs";
 import path from "node:path";
-import { fileURLToPath, pathToFileURL } from "node:url";
+import { fileURLToPath } from "node:url";
 
 import { findScriptFolders } from "./lib/scripts.mjs";
 
@@ -29,7 +56,36 @@ function findTestFiles(folder) {
         .map((name) => path.join(testsDir, name));
 }
 
-async function main() {
+/**
+ * Runs one test file in its own child process. `stdio: "inherit"` streams
+ * the child's own output (TAP from node:test, or a harness's own summary)
+ * straight through, so nothing here needs to parse or reformat it.
+ *
+ * @param {string} file Absolute path to the test file.
+ * @returns {boolean} Whether the file passed (clean, zero exit).
+ */
+function runTestFile(file) {
+    const result = spawnSync(process.execPath, [file], {
+        cwd: repoRoot,
+        stdio: "inherit",
+    });
+
+    if (result.error) {
+        console.error(`test FAILED  ${path.relative(repoRoot, file)}: ${result.error.message}`);
+        return false;
+    }
+    if (result.signal) {
+        console.error(`test FAILED  ${path.relative(repoRoot, file)}: killed by signal ${result.signal}`);
+        return false;
+    }
+    if (result.status !== 0) {
+        console.error(`test FAILED  ${path.relative(repoRoot, file)}: exited with code ${result.status}`);
+        return false;
+    }
+    return true;
+}
+
+function main() {
     const id = process.argv[2];
     const folders = findScriptFolders(repoRoot);
 
@@ -45,31 +101,30 @@ async function main() {
         return;
     }
 
-    let ran = 0;
-    let failed = false;
+    let passed = 0;
+    let failed = 0;
 
     for (const folder of targets) {
         for (const file of findTestFiles(folder)) {
-            ran += 1;
             console.log(`test        ${folder.id}  ${path.relative(repoRoot, file)}`);
-            try {
-                // Each test file is expected to run its own assertions at
-                // import time (e.g. via node:test or plain node:assert) and
-                // throw/reject on failure.
-                await import(pathToFileURL(file).href);
-            } catch (err) {
-                failed = true;
-                console.error(`test FAILED  ${folder.id}: ${err instanceof Error ? err.message : String(err)}`);
+            if (runTestFile(file)) {
+                passed += 1;
+            } else {
+                failed += 1;
             }
         }
     }
 
+    const ran = passed + failed;
     if (ran === 0) {
         console.log("test: no test files found under scripts/*/tests");
+        return;
     }
-    if (failed) {
+
+    console.log(`test: ${ran} file(s), ${passed} passed, ${failed} failed`);
+    if (failed > 0) {
         process.exitCode = 1;
     }
 }
 
-await main();
+main();
