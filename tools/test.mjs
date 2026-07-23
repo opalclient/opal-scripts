@@ -1,6 +1,7 @@
 #!/usr/bin/env node
-// Runs every scripts/<id>/tests/*.test.{mjs,js} file, or just one folder's,
-// each in its OWN child process (`node <file>`).
+// Runs every scripts/<id>/tests/*.test.{mjs,js} file (plus a bare
+// tests/harness.{js,mjs}), or just one folder's, each in its OWN child
+// process (`node <file>`).
 //
 // Usage:
 //   node tools/test.mjs            run every scripts/<id>/tests/*
@@ -40,7 +41,11 @@ import { fileURLToPath } from "node:url";
 import { findScriptFolders } from "./lib/scripts.mjs";
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
-const TEST_FILE_PATTERN = /\.(test|spec)\.(mjs|js)$/;
+// A test file is `<name>.test.{js,mjs}` / `<name>.spec.{js,mjs}`, or a bare
+// `harness.{js,mjs}` — Chomp's suite is a plain-script harness (not a node:test
+// file), named `tests/harness.js` per the restructure spec. All three self-run
+// under `node <file>` and signal pass/fail through the child's exit code.
+const TEST_FILE_PATTERN = /\.(test|spec)\.(mjs|js)$|^harness\.(mjs|js)$/;
 
 /**
  * @param {import("./lib/scripts.mjs").ScriptFolder} folder

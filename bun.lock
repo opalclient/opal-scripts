@@ -25,6 +25,13 @@
         "@opal-scripts/stub": "workspace:*",
       },
     },
+    "scripts/chomp": {
+      "name": "@opal-scripts/chomp",
+      "version": "0.0.0",
+      "dependencies": {
+        "@opal-scripts/stub": "workspace:*",
+      },
+    },
     "scripts/combat-hud": {
       "name": "@opal-scripts/combat-hud",
       "version": "0.0.0",
@@ -177,6 +184,8 @@
     "@esbuild/win32-x64": ["@esbuild/win32-x64@0.28.1", "", { "os": "win32", "cpu": "x64" }, "sha512-bm4Mowrv+GXMlpWX++EcXw/iLyd1o3+bJkC2DkWXYVvgZCqD/bSj9ctZeAMC3cIxgjRVR2Dufaiu4YPxr5gW1A=="],
 
     "@opal-scripts/auto-tool-switcher": ["@opal-scripts/auto-tool-switcher@workspace:scripts/auto-tool-switcher"],
+
+    "@opal-scripts/chomp": ["@opal-scripts/chomp@workspace:scripts/chomp"],
 
     "@opal-scripts/combat-hud": ["@opal-scripts/combat-hud@workspace:scripts/combat-hud"],
 
