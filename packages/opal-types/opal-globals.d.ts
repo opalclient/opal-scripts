@@ -159,22 +159,11 @@ interface RaytracedRotation {
 }
 
 /**
- * `net.minecraft.util.Mth`, bound as `MathHelper`.
- *
- * **Unusable — do not reach for it.** It is bound as the raw Mojang class,
- * which carries no `@HostAccess.Export`, so every call on it is denied at
- * runtime. Typed as `unknown` so the IDE refuses to autocomplete a method that
- * cannot work. For interpolation use `esp.lerp(start, end, tickDelta)`; for
- * general math use JavaScript's built-in `Math`.
- */
-declare const MathHelper: unknown;
-
-/**
  * The standard `java.awt.Color`, bound as `Color`. The one JDK type scripts
  * can touch directly: its two constructors and `getRGB()` are explicitly
- * allow-listed by the host-access policy, which is why they work where
- * `MathHelper`'s do not. An alternative to `renderer.color(r, g, b, a)` for
- * building packed ARGB integers.
+ * allow-listed by the host-access policy, unlike most raw Mojang/JDK classes.
+ * An alternative to `renderer.color(r, g, b, a)` for building packed ARGB
+ * integers.
  */
 interface JavaColor {
     /** Packed ARGB integer for this color, suitable for any renderer color parameter. */
@@ -1372,6 +1361,13 @@ interface WorldProxy {
     isSolid(pos: BlockPos): boolean;
     /** Localized display name of the block. */
     getBlockName(pos: BlockPos): string;
+    /**
+     * Registry id of the block (e.g. `"minecraft:stone"`). Locale-safe
+     * alternative to `getBlockName()` — use this for comparisons/logic instead
+     * of matching on the localized display name. Mirrors `getBlockName()`'s
+     * resolution: an unloaded `pos` yields `"minecraft:air"`.
+     */
+    getBlockId(pos: BlockPos): string;
     /** Breaking hardness; `-1` means unbreakable (bedrock). */
     getBlockHardness(pos: BlockPos): number;
 

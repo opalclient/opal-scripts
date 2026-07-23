@@ -793,6 +793,7 @@ function createOpalStub(options = {}) {
         isReplaceable: returning(false),
         isSolid: returning(true),
         getBlockName: returning(""),
+        getBlockId: returning("minecraft:stone"),
         getBlockHardness: returning(0),
         hasAdjacentBlock: returning(false),
         getAdjacentDirections: () => scriptList([]),
@@ -970,8 +971,6 @@ function createOpalStub(options = {}) {
         const rgb = packColor(r, g, b, a);
         return { getRGB: () => rgb };
     }
-    // MathHelper is the raw Mojang `Mth`, un-exported — a memberless brand.
-    const MathHelper = makeOpaqueToken("MathHelper");
 
     // =========================================================================
     //  11. The globals bundle + install / eval.
@@ -1001,7 +1000,6 @@ function createOpalStub(options = {}) {
         Vec2f,
         Vec3d,
         Color,
-        MathHelper,
     };
 
     /** Installs the fake globals onto `target` (default `globalThis`). Does NOT
