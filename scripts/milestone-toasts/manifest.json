@@ -1,0 +1,9 @@
+{
+    "id": "milestone-toasts",
+    "name": "Milestone Toasts",
+    "version": "1.0.0",
+    "authors": ["Opal"],
+    "description": "Pops a toast for fall survival, low/full health, and sprint streaks.",
+    "category": "core",
+    "entry": "src/MilestoneToasts.js"
+}

@@ -1,0 +1,9 @@
+{
+    "id": "look-assist",
+    "name": "Look Assist",
+    "version": "1.0.0",
+    "authors": ["Opal"],
+    "description": "Smoothly turns toward the nearest living entity in range and FOV.",
+    "category": "character",
+    "entry": "src/LookAssist.js"
+}

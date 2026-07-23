@@ -1,0 +1,8 @@
+{
+    "name": "@opal-scripts/packet-no-fall",
+    "version": "0.0.0",
+    "private": true,
+    "dependencies": {
+        "@opal-scripts/stub": "workspace:*"
+    }
+}

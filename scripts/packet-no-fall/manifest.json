@@ -1,0 +1,9 @@
+{
+    "id": "packet-no-fall",
+    "name": "Packet No Fall",
+    "version": "1.0.0",
+    "authors": ["Opal"],
+    "description": "Spoofs onGround in the movement packet while falling, so the server never sees a fall landing.",
+    "category": "character",
+    "entry": "src/PacketNoFall.js"
+}
