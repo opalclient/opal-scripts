@@ -45,7 +45,6 @@ template/                 copy this folder to start a new TypeScript script —
                            other folder
 tools/                    build.mjs / validate-manifest.mjs / publish-safety.mjs / test.mjs
                           — the CLI machinery behind the root `bun run` scripts
-docs/                     repo design docs
 ```
 
 `category` is a manifest field (`character | combo | core | ui | world`), not

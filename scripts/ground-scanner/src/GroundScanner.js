@@ -11,7 +11,7 @@
 //  size and turns amber, then red, the deeper it gets; a one-shot toast fires
 //  when you step out over a drop past the configured danger threshold.
 //
-//  This deliberately covers different ground from `character/FallWarning.js`:
+//  This deliberately covers different ground from `scripts/fall-warning/src/FallWarning.js`:
 //  FallWarning reacts to a fall already in progress using
 //  `player.getFallDistance()`; this script instead answers "is there ground
 //  under me right now, and how far down", using a plain block-by-block scan.

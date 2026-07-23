@@ -1,9 +1,9 @@
 // Shared helpers for the repo-tools scripts (build / test / validate).
 //
-// The target layout (see docs/superpowers/specs) is `scripts/<id>/manifest.json`
-// per script folder. Until that migration lands, `scripts/` won't exist at
-// all, so every helper here treats "no scripts/ directory" as "zero folders"
-// rather than an error.
+// The repo layout is `scripts/<id>/manifest.json` per script folder. Every
+// helper here treats a missing `scripts/` directory as "zero folders"
+// rather than an error, so build/test/validate no-op cleanly instead of
+// crashing if it's ever absent.
 
 import { existsSync, readdirSync, readFileSync } from "node:fs";
 import path from "node:path";

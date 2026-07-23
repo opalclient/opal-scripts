@@ -3,7 +3,7 @@
 ## Reporting a vulnerability
 
 **Do not open a public issue for a security vulnerability.** Report it
-privately via [Opal's private security advisory](https://github.com/opalclient/opal-scripts/security/advisories/new)
+privately via [Opal's private security advisory](https://github.com/opalclient/scripts/security/advisories/new)
 for this repository. If advisories are unavailable, use the private contact in
 the org's support channel.
 

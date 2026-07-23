@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // Validates every scripts/<id>/manifest.json against the repo's manifest
-// schema (docs/superpowers/specs/2026-07-22-scripts-repo-design.md):
+// schema:
 //
 //   id          kebab-case, unique, equal to the folder name
 //   name        nonempty string

@@ -15,7 +15,6 @@ so a fetcher gets file content, not a rendered page.
 - [CONTRIBUTING.md](https://raw.githubusercontent.com/opalclient/scripts/main/CONTRIBUTING.md): How to add a script, PR workflow, review criteria, commit policy.
 - [SECURITY.md](https://raw.githubusercontent.com/opalclient/scripts/main/SECURITY.md): Sandbox model and vulnerability reporting.
 - [CHANGELOG.md](https://raw.githubusercontent.com/opalclient/scripts/main/CHANGELOG.md): Released and unreleased changes.
-- [docs/superpowers/specs/2026-07-22-scripts-repo-design.md](https://raw.githubusercontent.com/opalclient/scripts/main/docs/superpowers/specs/2026-07-22-scripts-repo-design.md): The binding design spec for this repo's layout, manifest schema, and CI.
 
 ## Shared packages
 

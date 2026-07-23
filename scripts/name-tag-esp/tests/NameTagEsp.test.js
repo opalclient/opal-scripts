@@ -1,4 +1,4 @@
-// Tests world/NameTagEsp.js by driving its `renderScreen` handler directly
+// Tests ../src/NameTagEsp.js by driving its `renderScreen` handler directly
 // against staged world state, and asserting the coordinates it hands the
 // renderer are real numbers.
 //
