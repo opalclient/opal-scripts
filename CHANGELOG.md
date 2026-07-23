@@ -38,6 +38,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **BREAKING (source layout): `scripts/chomp/` is now a TypeScript engine +
+  game project (v1.2.0).** The single `src/Chomp.js` is gone; the source lives
+  under `src/engine/` (grid, movement, RNG, storage, VFX) and `src/game/`, with
+  `src/main.ts` as the manifest entry, esbuild-bundled to `dist/chomp.js`.
+  Gameplay is identical — the 326-check `tests/harness.js` runs against the
+  built bundle and passes unchanged (`bun run build chomp && bun run test
+  chomp`).
 - **BREAKING: repository restructured into a bun workspace, one folder per
   script.** The old `character/ combo/ core/ ui/ world/` category folders
   are gone; every script now lives at `scripts/<id>/` (`manifest.json` +

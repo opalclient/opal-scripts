@@ -153,11 +153,11 @@ Every `scripts/<id>/manifest.json` (checked by
 {
   "id": "chomp",
   "name": "Chomp",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "authors": ["trq"],
   "description": "Roguelite arcade game for the command palette.",
   "category": "ui",
-  "entry": "src/Chomp.js"
+  "entry": "src/main.ts"
 }
 ```
 

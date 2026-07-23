@@ -24,7 +24,7 @@ so a fetcher gets file content, not a rendered page.
 
 ## Scripts (scripts/<id>/)
 
-- [`chomp`](https://raw.githubusercontent.com/opalclient/scripts/main/scripts/chomp/src/Chomp.js) ★ flagship (ui): Roguelite arcade micro-game for the command palette — rounds, perks, elites, mutators, meta progression, backed by a 326-check deterministic test harness.
+- [`chomp`](https://raw.githubusercontent.com/opalclient/scripts/main/scripts/chomp/src/main.ts) ★ flagship (ui): Roguelite arcade micro-game for the command palette — rounds, perks, elites, mutators, meta progression, backed by a 326-check deterministic test harness.
 - [`milestone-toasts`](https://raw.githubusercontent.com/opalclient/scripts/main/scripts/milestone-toasts/src/MilestoneToasts.js) (core): Edge-triggered toast notifications for fall survival, low/full health, and sprint streaks.
 - [`packet-no-fall`](https://raw.githubusercontent.com/opalclient/scripts/main/scripts/packet-no-fall/src/PacketNoFall.js) (character): Rewrites the movement packet's `onGround` flag while falling, rate-limited with `timer`.
 - [`reaction-tester`](https://raw.githubusercontent.com/opalclient/scripts/main/scripts/reaction-tester/src/ReactionTester.js) (ui): A reflex-timing mini-game hosted in the command palette.
