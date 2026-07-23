@@ -1,162 +1,185 @@
-# opal-scripts
+# scripts
 
-> A curated gallery of example scripts for [Opal](https://opal.wtf)'s GraalVM
-> JavaScript scripting engine: real, runnable, well-commented `.js` files you
-> can copy from and remix, organized so you can find "the thing closest to
-> what I want to build."
+> The official public home of [Opal](https://opal.wtf) scripts: a curated
+> gallery, a TypeScript template to build your own, and a PR-based
+> contribution pipeline with CI gates — managed like a script marketplace,
+> Raycast-extensions-style.
 
 ## What this is
 
 Opal's scripting engine loads plain `.js` files from an `opal/scripts/`
 folder and exposes a curated set of proxy globals (`client`, `player`,
-`world`, `renderer`, `palette`, ...) onto the running Minecraft client. This
-repo is the "read the source to learn" corpus for that engine. Think of it
-like the WordPress Plugin Directory or a script-repository site for a game
-utility client: every file here is a complete, working example, not a
-snippet fragment.
+`world`, `renderer`, `palette`, `storage`, ...) onto the running Minecraft
+client. This repo is where every official script is built, tested, and
+released from: one folder per script, a canonical set of API typings, a
+shared test stub, and CI that has to go green before anything merges.
 
-Every script has a header comment explaining what it does, which globals and
-events it uses, and any gotcha worth knowing before you copy the pattern.
+Every script has a manifest (name, category, description) and a header
+comment explaining what it does, which globals and events it uses, and any
+gotcha worth knowing before you copy the pattern.
 
 ## What this is not
 
 - Not the scripting engine itself, and not the full API reference. That
   lives in Opal's own docs (linked from each script's header where relevant).
-- Not a place for one-off snippets. Every file here is a complete, working
-  module you could actually enable.
+- Not a place for one-off snippets. Every folder here is a complete,
+  installable script.
 - Not a source of product/pricing/business facts about Opal. This repo is
   purely technical and example-focused.
 
-## Quickstart
+## Layout
 
 ```
-1. Pick a script from the table below.
-2. Copy the .js file into your Opal install's opal/scripts/ folder.
-3. In-game, run:  .script reload
-4. Open the ClickGUI (Scripts category) and enable the module.
+scripts/<id>/            one folder per script
+  manifest.json           client-facing metadata (name, version, category, entry, ...)
+  package.json            workspace member, "@opal-scripts/<id>"
+  src/                     entry point per manifest.entry (.js or .ts)
+  tests/                   optional; runs against packages/stub in CI
+packages/
+  opal-types/             canonical opal-globals.d.ts — single source of truth
+                           for the scripting API's ambient types
+  stub/                   shared sandbox stub (createOpalStub) that lets a
+                           test load and drive a built script outside a live client
+template/                 copy this folder to start a new TypeScript script —
+                           typechecked, bundled, and tested the same as every
+                           other folder
+tools/                    build.mjs / validate-manifest.mjs / publish-safety.mjs / test.mjs
+                          — the CLI machinery behind the root `bun run` scripts
+docs/                     repo design docs
 ```
 
-Scripts downloaded from the public gallery through Opal's own dashboard land
-in a quarantine folder, `opal/scripts/pending/`, which the loader skips
-entirely: nothing there executes until you explicitly **Trust & run** it
-in-game, at which point it moves into `opal/scripts/` and loads normally.
-Files copied straight from this repo onto disk go directly into
-`opal/scripts/` (there is no repo-to-client automation here; you're reading
-the source and choosing to run it, which is the point).
+`category` is a manifest field (`character | combo | core | ui | world`), not
+a folder — every script lives at `scripts/<id>/` regardless of what it's
+categorized as.
+
+## Installing a script
+
+1. **Download a release bundle** — every tagged release (`<id>@<version>`)
+   attaches a single built file, `<id>.js`, to its GitHub Release. Grab it
+   and drop it into your Opal install's `opal/scripts/` folder.
+2. **Or build it yourself** — clone the repo, run `bun install`, then
+   `bun run build <id>` to produce `scripts/<id>/dist/<id>.js`, and copy that
+   file into `opal/scripts/` the same way.
+
+Either way, run `.script reload` in-game, then enable the script from the
+ClickGUI's Scripts category (or open it from the command palette, for
+scripts that ship a palette view — like [Chomp](scripts/chomp/)).
 
 <!-- prettier-ignore -->
 > [!NOTE]
-> Opal scripts run sandboxed: the engine grants access only to the documented
-> proxy API, with no filesystem access, no thread creation, and no reflection
-> into the wider client. Community scripts still stay quarantined until you
-> Trust & run them, since sandboxing limits what a script can *do*, not
-> whether it should be running on your account at all. Read a script before
-> you run it, including the ones in this repo.
+> Opal scripts run sandboxed: the engine grants access only to the
+> documented proxy API, with no filesystem access, no thread creation, and no
+> reflection into the wider client. Scripts downloaded through Opal's own
+> in-client dashboard still land in a quarantine folder
+> (`opal/scripts/pending/`) that the loader skips entirely until you
+> explicitly **Trust & run** them — sandboxing limits what a script can *do*,
+> not whether it should be running on your account at all. Read a script
+> before you run it, including the ones in this repo.
 
-## Structure
+## Creating a script
 
-```
-opal-scripts/
-├── core/         client, notification, overlay, and modules proxies
-├── character/    player, movement, rotation, and inventory proxies
-├── world/        world and esp proxies
-├── ui/           renderer and palette (command-palette view) proxies
-├── combo/        scripts that deliberately wire several proxies together
-└── tests/        Node test-runner suite for the pure, engine-independent
-                  helper functions a few scripts export (see CLAUDE.md)
-```
+1. **Copy the template**: `cp -r template scripts/my-cool-script` (kebab-case,
+   matching your script's `id`).
+2. **Rename the manifest and package**: `scripts/my-cool-script/manifest.json`
+   (`id`, `name`, `version`, `authors`, `description`, `category`) and
+   `scripts/my-cool-script/package.json` (`"name": "@opal-scripts/my-cool-script"`).
+3. **Install and write it**: `bun install`, then edit `src/main.ts`. Every
+   Opal global is typed ambiently by `@opal-scripts/opal-types` — nothing to
+   import. Prefer plain JavaScript? Copy any existing `scripts/<id>/` folder
+   instead and drop the `tsconfig.json` — the build/test tools work with either.
+4. **Typecheck, build, and test**:
+   ```bash
+   bunx tsc --noEmit -p scripts/my-cool-script   # if you kept the tsconfig
+   bun run build my-cool-script                   # -> dist/my-cool-script.js
+   bun run test my-cool-script                     # runs tests/*
+   ```
+5. **Open a PR** — see [CONTRIBUTING.md](CONTRIBUTING.md) for the full
+   checklist and review criteria.
 
-Run the test suite with `node --test tests/*.test.js`. No install step needed;
-it uses Node's built-in test runner.
+See [template/README.md](template/README.md) for the full copy-folder
+walkthrough.
+
+## CI gates
+
+Every pull request and every push to `main` runs, in this order:
+`validate` (manifest schema + publish-safety) → `lint` (Biome) →
+`typecheck` (the template scaffold, plus any script folder that carries its
+own `tsconfig.json`) → `build` (every script bundles via esbuild, 1 MB cap
+each) → `test` (every `scripts/<id>/tests/*`, isolated per file) →
+`check:template` (the template scaffold, built/typechecked/tested end to
+end). All six have to pass before human review. See
+[.github/workflows/ci.yml](.github/workflows/ci.yml).
+
+Tagging `<id>@<version>` (matching that script's manifest version) builds
+and publishes a GitHub Release with the bundle attached — see
+[.github/workflows/release.yml](.github/workflows/release.yml).
 
 ### What the test suite cannot tell you
 
-`tests/opal-stub.js` fakes the scripting globals so a script can be loaded
-under plain Node. **It cannot prove a sandbox denial** — it involves no host
-object and no GraalVM context. A member the stub answers may still be
-completely unreachable in-game. The real gate for API *shape* is
-`ScriptRepositorySandboxTest` in the `opal` repo, which evals through a live
+`packages/stub` fakes the scripting globals so a built script can be loaded
+and driven under plain Node/Bun. **It cannot prove a sandbox denial** — it
+involves no host object and no GraalVM context. A member the stub answers
+may still be completely unreachable in-game. The real gate for API *shape*
+is the sandbox test in the `opal` client repo, which evals through a live
 Graal context against real host objects under the actual `HostAccess.EXPLICIT`
-policy.
-
-This blind spot shipped six bugs. The stub used to fake host objects with plain
-JS object literals, which answer any call — so the suite encoded the API these
-scripts *assumed* rather than the one the sandbox *serves*, and stayed green
-while `mc.player` (27 call sites), `box.x` (NaN coordinates in both ESP
-scripts), `entity.getName().getString()`, `.length` on a returned list, and two
-deleted methods were all silently broken in-game.
-
-The stub now models the real contract — collections are `ScriptList`-shaped,
+policy. The stub models the real contract — collections are `ScriptList`-shaped,
 there are no bean properties, and reading an unexported member throws — but
-that only narrows the gap. It does not close it. When you add a script, check
-the method you are calling against the Java proxy in `opal`, not against the
-stub or the IDE typings.
+that only narrows the gap, it does not close it. When you add a script,
+check the method you are calling against the Java proxy in `opal`, not
+against the stub or the IDE typings.
 
-## Examples
+## Scripts
 
-### core/: client, notifications, overlay, modules
+**[Chomp](scripts/chomp/)** is the flagship: a full roguelite arcade
+micro-game (rounds, perks, elites, mutators, meta progression) that doubles
+as a teaching example for every scripting surface at once, backed by a
+deterministic 326-check test harness. See its own
+[README](scripts/chomp/README.md) for controls and systems.
 
-| Script | What it shows |
-|---|---|
-| [MilestoneToasts.js](core/MilestoneToasts.js) | Toast notifications for fall survival, low/full health, and sprint streaks, with edge-triggered state tracking so each milestone fires once, not every tick. |
-| [SessionIsland.js](core/SessionIsland.js) | A Dynamic Island showing session playtime and live enabled-module count, with an 8-dot "alive" ring animation. |
-| [ModuleGuard.js](core/ModuleGuard.js) | A configurable version of the docs' "disable Flight when KillAura is active" pattern: pick any Watch/Guard module pair, with auto-restore. |
-
-### character/: player, movement, rotation, inventory
-
-| Script | What it shows |
-|---|---|
-| [AutoToolSwitcher.js](character/AutoToolSwitcher.js) | Silently switches to the best hotbar tool for the block you're facing, using a cardinal-facing heuristic instead of a raycast, and documents that tradeoff. |
-| [PotionAlert.js](character/PotionAlert.js) | Your active effects as a HUD column with expiry warnings, plus a scan flagging nearby players running combat buffs. Claims a default key with `module.setBind(keys.F7)`, and teaches the 0-based-amplifier / 1-based-level split and the `-1` living-only sentinel. |
-| [SprintSpeedHud.js](character/SprintSpeedHud.js) | A corner HUD panel with a live speed number, sprint indicator, and a fixed-timestep sparkline history. |
-| [LookAssist.js](character/LookAssist.js) | Smooth-looks at the nearest living entity in an FOV cone (optionally players only, via `entity.isPlayer()`), composing the rotation proxy's anti-detection helpers (`patchConstantRotation`) on top of `setSmooth`. |
-| [FallWarning.js](character/FallWarning.js) | Warns before a fall lands if the (deliberately approximate) estimated damage looks dangerous, with a pulsing screen-edge vignette. |
-| [PacketNoFall.js](character/PacketNoFall.js) | Rewrites the outbound movement packet's `onGround` flag to `true` while genuinely falling, demonstrating the packet scripting API's mutation model, with a `timer`-rate-limited debug log. |
-
-### world/: world, esp
-
-| Script | What it shows |
-|---|---|
-| [NameTagEsp.js](world/NameTagEsp.js) | Floating nameplate-pill ESP tags (name + distance) that fade toward the edge of their range, instead of a bounding-box outline. |
-| [DayCycleClock.js](world/DayCycleClock.js) | A Dynamic Island clock that converts `world.getTimeOfDay()` ticks into a real 24h/12h time, with a day/night gradient progress bar. |
-
-### ui/: renderer, palette
-
-| Script | What it shows |
-|---|---|
-| [HudPanelShowcase.js](ui/HudPanelShowcase.js) | A pure renderer-proxy showcase: gradients, the Path API, composite glow/shadow/blur effects, and the color helper functions. No gameplay logic at all. |
-| [ReactionTester.js](ui/ReactionTester.js) | **Flagship palette view #1.** A reflex-timing mini-game: wait for green, react fast, track your best and rolling average. |
-| [StatsDashboard.js](ui/StatsDashboard.js) | **Flagship palette view #2.** A live, read-only stat-tracking dashboard: health, position, dimension, FPS, and speed, with rolling sparkline graphs. |
-
-### combo/: several proxies wired together
-
-| Script | What it shows |
-|---|---|
-| [CombatHud.js](combo/CombatHud.js) | A combat-awareness HUD combining `esp` + `player` + `world` + `rotation`: target box, distance, an FOV-offset gauge, and your own crit/weapon status. Also explains why there's no target health bar. |
-| [GroundScanner.js](combo/GroundScanner.js) | Scans straight down from your feet for the nearest solid block using plain `BlockPos` arithmetic, warning before you step over a dangerous drop. |
+| ID | Name | Category | What it does |
+|---|---|---|---|
+| [`auto-tool-switcher`](scripts/auto-tool-switcher/) | Auto Tool Switcher | character | Switches to the best hotbar tool for the block you're roughly facing. |
+| [`chomp`](scripts/chomp/) | Chomp ★ | ui | Roguelite arcade micro-game for the command palette. |
+| [`combat-hud`](scripts/combat-hud/) | Combat HUD | combo | Nearest-target ESP box, distance/FOV gauge, and a self crit/weapon status row. |
+| [`day-cycle-clock`](scripts/day-cycle-clock/) | Day Cycle Clock | world | Dynamic Island showing the in-game clock and day/night progress. |
+| [`fall-warning`](scripts/fall-warning/) | Fall Warning | character | Warns before a fall lands if the estimated damage looks dangerous. |
+| [`ground-scanner`](scripts/ground-scanner/) | Ground Scanner | combo | Shows how many blocks of empty space are directly below you. |
+| [`hud-panel-showcase`](scripts/hud-panel-showcase/) | HUD Panel Showcase | ui | A single HUD card that showcases the renderer proxy's shapes, gradients, and path API. |
+| [`look-assist`](scripts/look-assist/) | Look Assist | character | Smoothly turns toward the nearest living entity in range and FOV. |
+| [`milestone-toasts`](scripts/milestone-toasts/) | Milestone Toasts | core | Pops a toast for fall survival, low/full health, and sprint streaks. |
+| [`module-guard`](scripts/module-guard/) | Module Guard | core | Disables a movement/exploit module whenever a chosen combat module is active. |
+| [`name-tag-esp`](scripts/name-tag-esp/) | Name Tag ESP | world | Floating name/distance tags above nearby living entities. |
+| [`packet-no-fall`](scripts/packet-no-fall/) | Packet No Fall | character | Spoofs `onGround` in the movement packet while falling, so the server never sees a fall landing. |
+| [`potion-alert`](scripts/potion-alert/) | Potion Alert | character | Your active effects, plus a heads-up when a nearby player is potted. |
+| [`reaction-tester`](scripts/reaction-tester/) | Reaction Tester | ui | A reflex-timing mini-game hosted in the command palette. |
+| [`session-island`](scripts/session-island/) | Session Island | core | Dynamic Island showing session time and live enabled-module count. |
+| [`sprint-speed-hud`](scripts/sprint-speed-hud/) | Sprint Speed HUD | character | Corner HUD panel: live speed number, sprint indicator, and a sparkline history. |
+| [`stats-dashboard`](scripts/stats-dashboard/) | Stats Dashboard | ui | Live health/position/FPS/speed dashboard hosted in the command palette. |
 
 ## For AI agents
 
 This repo is structured so an AI coding assistant can work in it in a single
 pass:
 
-- **[CLAUDE.md](CLAUDE.md)**: the mental model. What a script looks like,
-  the settings/event conventions, the color-construction gotcha, and the
-  pitfalls the scripting API's constraints invite.
+- **[CLAUDE.md](CLAUDE.md)**: the mental model — layout, tools, the test
+  isolation model, the manifest schema, and the scripting API's pitfalls.
 - **[llms.txt](llms.txt)**: a structured, link-per-file index of every
   script and doc in this repo.
-- Every script's header comment is written to be self-contained: read the
-  header before reading the body, and you'll know which globals/events it
-  touches and why it's built the way it is.
+- Every script's header comment is self-contained: read the header before
+  the body, and you'll know which globals/events it touches and why it's
+  built the way it is.
 
-If you're an agent: load `CLAUDE.md` and `llms.txt` before writing a new
-script. Follow the commit policy in [CONTRIBUTING.md](CONTRIBUTING.md):
-Conventional Commits, and you own your commits (no AI-attribution trailers).
+Key commands: `bun run validate`, `bun run lint`, `bun run build [id]`,
+`bun run test [id]`, `bun run check:template`. Load `CLAUDE.md` and
+`llms.txt` before writing a new script, then follow the commit policy in
+[CONTRIBUTING.md](CONTRIBUTING.md): Conventional Commits, and you own your
+commits (no AI-attribution trailers).
 
 ## Contributing
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) for how to add a new example script.
-This project follows the [Contributor Covenant 2.1](CODE_OF_CONDUCT.md).
+See [CONTRIBUTING.md](CONTRIBUTING.md) for how to add a new script or fix an
+existing one. This project follows the
+[Contributor Covenant 2.1](CODE_OF_CONDUCT.md).
 
 ## Security
 

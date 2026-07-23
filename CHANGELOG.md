@@ -9,6 +9,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **`scripts/chomp/` (v1.1.0)** — Chomp lands as the flagship script: a
+  full roguelite arcade micro-game (seeded mazes, perks/curses, elite
+  affixes, mutators, pickups, meta progression) that runs both as a
+  command-palette view and a fullscreen overlay module from one shared
+  engine. Backed by `tests/harness.js`, a deterministic 326-check test
+  harness (300 seeded mazes plus engine/curve/persistence checks and four
+  source-audit gates) run via `bun run test chomp`.
+- **The `storage` global** is now documented and stubbed: `set`/`get`/
+  `remove`/`keys`, persisted per script (32 keys / 8 KB per value / 64 KB
+  total / keys ≤ 64 chars), added to `packages/opal-types/opal-globals.d.ts`
+  and `packages/stub`. This is the first release where a script can persist
+  state across sessions without inventing its own encoding scheme — see
+  `template/src/main.ts` for the minimal pattern and `scripts/chomp/`'s
+  `chomp.meta`/`chomp.highscores` keys for a fuller one.
 - `character/PotionAlert.js` — your active effects as a HUD column with expiry
   warnings, plus a scan flagging nearby players running combat buffs. Exercises
   `module.setBind(keys.F7)`, `player.getEffects()`, and the entity health /
@@ -24,6 +38,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **BREAKING: repository restructured into a bun workspace, one folder per
+  script.** The old `character/ combo/ core/ ui/ world/` category folders
+  are gone; every script now lives at `scripts/<id>/` (`manifest.json` +
+  `package.json` + `src/` + optional `tests/`), with `category` moved into
+  the manifest as a field instead of a folder. Canonical API types
+  (`packages/opal-types`) and the shared sandbox stub (`packages/stub`,
+  replacing `tests/opal-stub.js`) are now real workspace packages;
+  `template/` is a copy-to-start TypeScript scaffold. Root
+  `bun run build|test|lint|validate` replace the old single
+  `node --check`/`node --test` gate, and CI (`.github/workflows/ci.yml`)
+  runs all of them plus a `check:template` pass on every PR. A new
+  `.github/workflows/release.yml` publishes a script's built bundle to a
+  GitHub Release when its `<id>@<version>` tag is pushed. See README.md and
+  CLAUDE.md for the new layout.
 - **BREAKING (runtime API): `entity.getName()` returns a String.** It used to
   return a Minecraft `Component`; the `entity.getName().getString()` idiom is
   gone. Affects `world/NameTagEsp.js`, `combo/CombatHud.js`,
@@ -49,11 +77,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `world.getBlockState()`, `world.getBlock()`, `client.getModule()`, and the
   `Vec3i` global. All returned raw, unreadable types, so nothing could depend
   on them. `new Vec3d(x, y, z)` now works and yields a `ScriptVec3`.
-- `tests/opal-stub.js` reworked to model the real sandbox contract instead of
-  the API the scripts assumed. Fakes are now throwing proxies shaped like the
-  Java wrappers, so reading an unexported member fails loudly instead of
-  answering `undefined`. See the file header and the README for why a green run
-  here still proves nothing about a sandbox denial.
+- `tests/opal-stub.js` (later promoted to `packages/stub`, see the
+  restructure entry above) reworked to model the real sandbox contract
+  instead of the API the scripts assumed. Fakes are now throwing proxies
+  shaped like the Java wrappers, so reading an unexported member fails
+  loudly instead of answering `undefined`. See README.md for why a green
+  run here still proves nothing about a sandbox denial.
 
 ### Fixed
 
