@@ -33,7 +33,8 @@
         // at node_modules/@opal-scripts/opal-types.
         "types": ["@opal-scripts/opal-types"]
     },
-    // Chomp.js (the v1.1.0 entry) stays plain .js and is deliberately NOT typed
-    // this task; the .ts glob leaves it out of the program.
+    // The whole TypeScript engine + game project under src/ (entry src/main.ts,
+    // bundled by esbuild into dist/chomp.js). allowJs is off, so the glob picks
+    // up every .ts and nothing else.
     "include": ["src/**/*.ts"]
 }

@@ -6,7 +6,6 @@
             "packages/**",
             "template/**",
             "scripts/chomp/src/**",
-            "!scripts/chomp/src/Chomp.js",
             "!**/*.d.ts",
             "!**/*.json",
             "!**/dist",

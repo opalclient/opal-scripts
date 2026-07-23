@@ -5,9 +5,13 @@
 //  The three data surfaces the whole game reads through: the TEXT table (every
 //  player-facing string), the THEMES set (14 colour schemes, packed to ARGB ints
 //  via renderer.color at load), and difficulty(round) — the SINGLE home of every
-//  per-round curve constant. Uses the ambient `renderer` global to pack colours;
-//  it imports no engine module.
+//  per-round curve constant. Also the active-theme wiring: the module-level
+//  `active` holder (the colour set + name the whole renderer draws through) and a
+//  shuffle bag over the unlocked themes. Uses the ambient `renderer`/`Math` globals
+//  and one engine helper (the shuffle bag).
 // =============================================================================
+
+import { ShuffleBag } from "../engine/rng";
 
 // A colour as an [r, g, b] triple, before it is packed to an ARGB int.
 export type Rgb = [number, number, number];
@@ -416,4 +420,39 @@ export function difficulty(round: number): Difficulty {
         eyesSpeed: Math.min(12, 9 + 0.3 * n),
         knockRate: Math.max(0.05, 0.15 - 0.008 * n),
     };
+}
+
+// -----------------------------------------------------------------------------
+//  Active theme + the theme shuffle bag. `active` is the module-level colour set
+//  the whole renderer reads through — a mutable holder shared by BOTH game
+//  surfaces (the palette view and the overlay), exactly as the original's
+//  module-level `theme`/`themeName` were. The bag is a no-repeat draw over the
+//  currently-unlocked themes; it refills and reshuffles once it empties, and
+//  re-reads THEMES each refill so a newly unlocked theme joins the next cycle.
+// -----------------------------------------------------------------------------
+export const active: { theme: ThemeColors; themeName: string } = {
+    theme: (THEMES[0] as Theme).colors,
+    themeName: (THEMES[0] as Theme).name,
+};
+
+// Draws Math.random LIVE (`() => Math.random()`) rather than capturing the global,
+// so the harness's per-run reseed is honoured — identical to the original's bare
+// `Math.random()` shuffle draw, in count and order (one draw per element).
+const themeBag = new ShuffleBag<Theme>(
+    () => THEMES.filter((t) => !t.locked),
+    () => Math.random(),
+);
+
+// Advance to the next theme: pop the bag (refilling + reshuffling first when dry).
+export function pickTheme(): void {
+    const t = themeBag.next();
+    if (!t) return;
+    active.theme = t.colors;
+    active.themeName = t.name;
+}
+
+// Refill + reshuffle the bag now, returning the shuffled contents — the test hook
+// reads their ids to prove an unlocked theme joins the bag.
+export function refillThemeBag(): Theme[] {
+    return themeBag.reload();
 }
