@@ -242,13 +242,22 @@ function createOpalStub(options = {}) {
         });
     }
 
+    /** A wrapped empty `ScriptItemStack` — the sentinel a living entity/hand yields, never Java `null`. */
+    const makeEmptyStack = () => makeFakeItemStack({ empty: true, name: "Air", id: "minecraft:air", count: 0 });
+
     /**
      * A `ScriptEntity`-shaped fake. `getName()` returns a plain String (not a
      * Minecraft `Component`). Living-only reads (`getHealth`/`getMaxHealth`/
      * `getAbsorption`/`getArmor`) answer the `-1` sentinel on a non-living entity.
+     * `getHurtTime()` is `0` (not `-1`) for a non-living entity — it does not
+     * follow that convention. `getPing()` is keyed off `isPlayer()`, not
+     * `isLiving()`, and answers `-1` off a non-player/unknown. The hand/armor
+     * reads are `null`/empty-list off a non-living entity, and the wrapped
+     * empty stack (never `null`) for an empty hand/slot on a living one.
      */
     function makeFakeEntity(o = {}) {
         const living = o.living ?? true;
+        const isPlayer = o.player ?? false;
         const effects = o.effects ?? [];
         const sentinel = (value) => (living ? value : -1);
         return hostObject("ScriptEntity", {
@@ -257,7 +266,7 @@ function createOpalStub(options = {}) {
             getUuid: () => o.uuid ?? "00000000-0000-0000-0000-000000000000",
             isAlive: () => o.alive ?? true,
             isLiving: () => living,
-            isPlayer: () => o.player ?? false,
+            isPlayer: () => isPlayer,
             getX: () => o.x ?? 0,
             getY: () => o.y ?? 64,
             getZ: () => o.z ?? 0,
@@ -268,9 +277,15 @@ function createOpalStub(options = {}) {
             getAbsorption: () => sentinel(o.absorption ?? 0),
             getArmor: () => sentinel(o.armor ?? 0),
             getDistance: () => o.distance ?? 0,
+            getHurtTime: () => o.hurtTime ?? 0,
+            getPing: () => (isPlayer ? (o.ping ?? -1) : -1),
             hasEffect: (name) => effects.some((e) => e.getName().toLowerCase() === String(name).toLowerCase()),
             getEffect: (name) => effects.find((e) => e.getName().toLowerCase() === String(name).toLowerCase()) ?? null,
             getEffects: () => scriptList(effects),
+            getMainHandItem: () => (living ? (o.mainHandItem ?? makeEmptyStack()) : null),
+            getOffHandItem: () => (living ? (o.offHandItem ?? makeEmptyStack()) : null),
+            // feet -> legs -> chest -> head; always 4 entries (humanoid slots only) for a living entity.
+            getArmorItems: () => scriptList(living ? (o.armorItems ?? [0, 1, 2, 3].map(() => makeEmptyStack())) : []),
             toString: () => `ScriptEntity(${o.name ?? "Entity"})`,
         });
     }
@@ -561,6 +576,7 @@ function createOpalStub(options = {}) {
         image: noop,
         imageTinted: noop,
         destroyImage: noop,
+        drawPlayerHead: noop,
         // path api
         beginPath: noop,
         moveTo: noop,
@@ -720,6 +736,7 @@ function createOpalStub(options = {}) {
         getEffects: () => scriptList(stubState.effects),
         canCrit: returning(false),
         getAttackDamage: returning(1),
+        getAttackCooldown: returning(1), // no local player in the stub's implicit sense -> fully charged
         getEntityInteractionRange: returning(3),
         isHoldingWeapon: returning(false),
         getDistanceToEntity: (entity) => (entity === null ? -1 : entity.getDistance()),

@@ -294,12 +294,43 @@ interface Entity {
     getArmor(): number;
     /** Distance from the local player, in blocks. */
     getDistance(): number;
+    /**
+     * Ticks remaining in the red hurt-flash animation (`LivingEntity.hurtTime`).
+     * `0` when not flashing, and `0` (not `-1`) for a non-living entity — this
+     * read does not follow the `-1` living-only sentinel convention.
+     */
+    getHurtTime(): number;
+    /**
+     * Network latency in milliseconds, as shown in the player list. `-1` when
+     * this is not a player entity, there is no active connection, or the
+     * player is absent from the connection's player list (latency unknown).
+     */
+    getPing(): number;
     /** Whether this entity has the named effect (matched on display name, case-insensitively). */
     hasEffect(name: string): boolean;
     /** The named effect, or `null` if absent or this is not a living entity. */
     getEffect(name: string): Effect | null;
     /** Every active effect on this entity. Empty for a non-living entity. */
     getEffects(): ScriptList<Effect>;
+    /**
+     * Main-hand item stack, or `null` if this is not a living entity. A living
+     * entity with an empty hand yields the wrapped empty stack (`isEmpty()`
+     * `true`), never `null` — mirrors `inventory.getMainHandStack()`.
+     */
+    getMainHandItem(): ItemStack | null;
+    /**
+     * Off-hand item stack, or `null` if this is not a living entity. A living
+     * entity with an empty hand yields the wrapped empty stack (`isEmpty()`
+     * `true`), never `null` — mirrors `inventory.getOffHandStack()`.
+     */
+    getOffHandItem(): ItemStack | null;
+    /**
+     * Worn armor, ordered **feet -> legs -> chest -> head**. A living entity
+     * always yields exactly 4 entries (humanoid armor slots only — the BODY/
+     * animal-armor slot is excluded); empty slots are wrapped empty stacks,
+     * not skipped. Empty list for a non-living entity.
+     */
+    getArmorItems(): ScriptList<ItemStack>;
     toString(): string;
 }
 /** A living entity (mob or player). Same wrapper — `isLiving()` reports which. */
@@ -1171,6 +1202,11 @@ interface PlayerProxy {
     canCrit(): boolean;
     /** Attack damage of the item currently held in the main hand. */
     getAttackDamage(): number;
+    /**
+     * Attack strength scale, `0.0` right after an attack rising to `1.0` when
+     * fully recharged. `1.0` (fully charged) when there is no local player.
+     */
+    getAttackCooldown(): number;
     /** Maximum distance, in blocks, at which the player can attack/interact with entities. */
     getEntityInteractionRange(): number;
     /** Whether the main-hand item is a weapon (sword, axe, or pickaxe). */
@@ -1492,6 +1528,14 @@ interface RendererProxy {
     imageTinted(handle: ScriptImage, x: number, y: number, width: number, height: number, radius: number, tint: ARGBColor): void;
     /** Releases a GPU image previously obtained from `loadImage` and frees its backend resources. */
     destroyImage(handle: ScriptImage): void;
+
+    /**
+     * Draws a player's skin face (with the hat overlay on top) into the
+     * square `(x, y, size, size)`. **Silent no-op** (draws nothing) when
+     * `entity` is `null`, the entity is not a player, or the skin cannot be
+     * resolved.
+     */
+    drawPlayerHead(entity: Entity, x: number, y: number, size: number): void;
 
     /** Begins a new custom vector path. Subsequent `moveTo`/`lineTo`/`quadTo`/`cubicTo` calls build it. */
     beginPath(): void;
