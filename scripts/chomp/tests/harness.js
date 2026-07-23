@@ -325,7 +325,7 @@ let difficultyMono = true;
 }
 
 // ---- Task 6: events, pickups, interactables ---------------------------------
-const { EVENTS, PICKUPS, PERKS, CURSES, ELITES, MUTATORS } = T;
+const { PICKUPS, PERKS, CURSES, ELITES, MUTATORS } = T;
 const DT6 = 1 / 60;
 
 // Park all four ghosts as harmless eyes in the pen so a scenario can tick to its

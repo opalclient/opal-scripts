@@ -20,7 +20,7 @@ approach.
 
 - [ ] Every new/changed script has a header comment (what it does, which globals/events it uses, gotchas)
 - [ ] Colors are built with `renderer.color(...)`, never raw `0xAARRGGBB` literals
-- [ ] `mc.player` / `mc.world` are null-guarded before use
+- [ ] `mc.getPlayer()` / `mc.getWorld()` results are null-checked (the call form — never the `mc.player` property, which is not exposed)
 - [ ] The script has a realistic settings block (`addBool`/`addNumber`/`addMode`/`addGroup`) where it makes sense
 - [ ] `manifest.json` is accurate (`id` equals the folder name, `category`, `version`, `description`)
 - [ ] `bun run validate && bun run lint && bun run build <id> && bun run test <id>` passes locally

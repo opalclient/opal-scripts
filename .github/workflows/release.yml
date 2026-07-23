@@ -57,14 +57,19 @@ jobs:
         run: bun install --frozen-lockfile
 
       - name: Build the tagged script
-        run: bun run build ${{ steps.tag.outputs.id }}
+        env:
+          SCRIPT_ID: ${{ steps.tag.outputs.id }}
+        run: bun run build "$SCRIPT_ID"
 
       - name: Create the GitHub Release
         env:
           GH_TOKEN: ${{ github.token }}
+          SCRIPT_ID: ${{ steps.tag.outputs.id }}
+          SCRIPT_VERSION: ${{ steps.tag.outputs.version }}
+          RELEASE_TAG: ${{ steps.tag.outputs.tag }}
         run: |
           set -euo pipefail
-          gh release create "${{ steps.tag.outputs.tag }}" \
-            "scripts/${{ steps.tag.outputs.id }}/dist/${{ steps.tag.outputs.id }}.js" \
-            --title "${{ steps.tag.outputs.id }}@${{ steps.tag.outputs.version }}" \
+          gh release create "$RELEASE_TAG" \
+            "scripts/$SCRIPT_ID/dist/$SCRIPT_ID.js" \
+            --title "$SCRIPT_ID@$SCRIPT_VERSION" \
             --generate-notes

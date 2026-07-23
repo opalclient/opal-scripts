@@ -124,8 +124,10 @@ Graal context against real host objects under the actual `HostAccess.EXPLICIT`
 policy. The stub models the real contract — collections are `ScriptList`-shaped,
 there are no bean properties, and reading an unexported member throws — but
 that only narrows the gap, it does not close it. When you add a script,
-check the method you are calling against the Java proxy in `opal`, not
-against the stub or the IDE typings.
+check the method you are calling against
+[`packages/opal-types`](packages/opal-types/opal-globals.d.ts) (the
+canonical ambient types, jsdoc'd per member) and the client's own in-app
+scripting documentation, not against the stub's behavior alone.
 
 ## Scripts
 

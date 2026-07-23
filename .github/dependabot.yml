@@ -1,5 +1,7 @@
-# This repo ships plain, dependency-free .js scripts (no package.json). The
-# only ecosystem actually present is the GitHub Actions workflows themselves.
+# This repo is a bun workspace with real devDependencies (@biomejs/biome,
+# esbuild, typescript) tracked in bun.lock. Dependabot ecosystem coverage
+# here is GitHub Actions only; the workspace's own devDependencies are
+# reviewed and bumped manually for now.
 version: 2
 updates:
   - package-ecosystem: "github-actions"

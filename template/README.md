@@ -46,9 +46,12 @@ instead and drop the `tsconfig.json` — the build/test tools work with either.)
 6. **Write a test.** Copy `tests/main.test.js` into your folder, point
    `DIST_PATH` at your own `dist/<id>.js`, and rewrite the assertions for
    your module's own settings, handlers, and storage keys. Like this
-   template, your test needs a build first — `tools/test.mjs` runs
-   `scripts/*/tests/*` against the *built* bundle via `stub.evalScript`, not
-   the TypeScript source.
+   template, your test needs a build first, since there's no `require()`
+   path for a `.ts` file — it evals the *built* bundle via
+   `stub.evalScript`, not the TypeScript source. (Gallery `.js` scripts test
+   differently: their tests `require()` `../src/<Entry>.js` directly, no
+   build needed. `tools/test.mjs` itself just runs whichever
+   `scripts/*/tests/*` files exist — it has no build step of its own.)
 
 ## Verifying the template itself
 

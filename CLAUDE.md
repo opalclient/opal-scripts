@@ -190,10 +190,14 @@ Every `scripts/<id>/manifest.json` (checked by
 - `tools/validate-manifest.mjs` — the manifest schema above, plus
   folder/`id` uniqueness.
 - `tools/publish-safety.mjs` — see below.
-- A script's test builds against the **built bundle**, not the source
-  directly — `createOpalStub().evalScript(path)` `eval`s `dist/<id>.js` the
-  same way the sandbox would. Run `bun run build <id>` (or the workspace
-  build) before `bun run test <id>` if you've only just changed the source.
+- A gallery script's test `require()`s its `../src/<Entry>.js` directly
+  (after `createOpalStub().installGlobals()`) — plain JS needs no build step
+  to test. The template's TypeScript pattern is the exception: `main.ts`
+  only exists as compiled output, so its test evals the **built bundle** via
+  `createOpalStub().evalScript(path)`. Run `bun run build <id>` (or
+  `check:template`) first for a TS script; `tools/test.mjs` itself has no
+  build dependency — it just spawns whichever `tests/*.test.{js,mjs}` files
+  already exist.
 
 ## Template copy-safety
 
@@ -238,12 +242,15 @@ anything beyond the technical, example-focused scope of this repo — see
   Script folders under `scripts/` aren't Biome-linted individually today —
   match the existing style by hand.
 - Tests: `packages/stub`'s `createOpalStub()` installs the sandbox globals
-  and can `evalScript()` a built bundle. A script exports its pure helpers
-  the same way as before — a guarded
+  onto `globalThis`. A script exports its pure helpers the same way as
+  before — a guarded
   `if (typeof module !== "undefined" && module.exports) module.exports = { ... };`
-  at the bottom of the source file — but the *test* now lives at
-  `scripts/<id>/tests/*.test.js` and drives the built `dist/<id>.js` through
-  the stub rather than requiring the source module directly. Render/tick
+  at the bottom of the source file — and its test at
+  `scripts/<id>/tests/*.test.js` `require()`s that source module directly
+  out of `src/`, right after installing the globals. TypeScript scripts
+  (the template pattern) are the one exception: there's no `require()` path
+  for a `.ts` file, so that test builds first and evals the built
+  `dist/<id>.js` bundle through `stub.evalScript()` instead. Render/tick
   logic that only makes sense inside a live Opal client is out of scope for
   this suite — that gets exercised by actually running the script in-game
   before opening a PR. Run one folder's tests with `bun run test <id>`, or

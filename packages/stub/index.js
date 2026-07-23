@@ -52,9 +52,12 @@
 //  DETERMINISM IS CALLER DISCIPLINE (one stub per test file). A successful
 //  `evalScript` leaves the frozen `Date.now` and seeded `Math.random` INSTALLED
 //  so the caller can drive gameplay deterministically; the caller is responsible
-//  for `restoreClock()`/`restoreRandom()` at end of file. This matters because
-//  `tools/test.mjs` imports every test file into one process — a file that
-//  froze the clock and never restored would poison the files that run after it.
+//  for `restoreClock()`/`restoreRandom()` at end of file. `tools/test.mjs` runs
+//  each test file in its own child process today, so one file's un-restored
+//  clock/random can no longer poison another file's run through that runner —
+//  but the discipline still matters for anyone running a file directly
+//  (`node scripts/<id>/tests/*.test.js`) or importing this stub outside
+//  `tools/test.mjs` altogether, so restore at end of file regardless.
 //  (A mid-eval throw self-restores; only the success path persists.)
 //
 //  STORAGE-ABSENT TESTING BYPASSES evalScript. `evalScript` calls

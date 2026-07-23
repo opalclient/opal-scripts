@@ -12,9 +12,13 @@ bun install
 bun run validate && bun run lint && bun run build && bun run test
 ```
 
-That's the same gate CI runs. See [CLAUDE.md](CLAUDE.md) for the repo's
-mental model and [Opal's scripting docs](https://opal.wtf/docs/scripting)
-for the full API reference.
+That's most of the gate CI runs — CI also typechecks every `tsconfig.json`
+in the repo (`bunx tsc --noEmit -p <dir>`, template included) and runs
+`bun run check:template` to build/typecheck/test the template scaffold end
+to end; run both locally too if you touched TypeScript or `template/`. See
+[CLAUDE.md](CLAUDE.md) for the repo's mental model and
+[Opal's scripting docs](https://opal.wtf/docs/scripting) for the full API
+reference.
 
 ## Ways to contribute
 
@@ -145,9 +149,11 @@ category, e.g. `feat(world): add day-cycle-clock`).
 - Match the style already in the gallery: a header comment block, settings
   declared before any `module.on(...)` calls, JSDoc on non-trivial helper
   functions, and 4-space indentation (see `.editorconfig`).
-- TypeScript scripts (anything with a `tsconfig.json`) run under Biome + the
-  strict compiler options in `tsconfig.base.json` — `bun run lint` and the
-  per-folder `tsc --noEmit` both have to pass.
+- TypeScript scripts (anything with a `tsconfig.json`) typecheck under the
+  strict compiler options in `tsconfig.base.json` — the per-folder
+  `tsc --noEmit` has to pass. `bun run lint` (Biome) covers `tools/`,
+  `packages/`, and `template/` only; `scripts/**` isn't Biome-linted
+  individually today, so match the existing style by hand there.
 - No obfuscation — reviewers (and downstream users learning from your script)
   need to read the code plainly.
 - No network calls, no filesystem access outside what the Opal APIs expose,

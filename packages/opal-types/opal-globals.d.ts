@@ -7,11 +7,11 @@
  * completion shim — they are downstream consumers of this package, not the
  * source. When the scripting API changes, this file changes first.
  *
- * SOURCE OF TRUTH FOR THE FILE ITSELF: the Opal scripting docs
- * (`resources/docs/en/scripting/**`) and, where the two ever disagree, the
- * Java proxies under `wtf/opal/scripting/` in the opal client, which is what
- * actually runs. Every member below corresponds to a documented method or
- * table entry — signatures, params, and return types are not invented.
+ * SOURCE OF TRUTH FOR THE FILE ITSELF: generated from the client's exported
+ * scripting surface — its published scripting docs, and, where the two ever
+ * disagree, the Java proxies that actually run inside the client. Every
+ * member below corresponds to a documented method or table entry —
+ * signatures, params, and return types are not invented.
  *
  * The Opal GraalVM JS engine injects these names directly into every script's
  * global scope — `client`, `player`, `world`, `renderer`, `notification`,
@@ -1434,7 +1434,7 @@ declare const esp: EspProxy;
 type RenderContent = () => void;
 
 /**
- * A complete 2D drawing API backed by the active divinity canvas. Every draw
+ * A complete 2D drawing API backed by the client's 2D canvas. Every draw
  * call must run inside an active canvas frame: a module's `renderScreen`
  * callback, a command-palette view's `render`, or a Dynamic Island's
  * `render` callback. Outside an active frame, image draws are silently
