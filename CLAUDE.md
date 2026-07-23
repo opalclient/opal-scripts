@@ -15,7 +15,7 @@ scripts/<id>/            one folder per script — manifest.json, package.json,
                           src/<entry>, optional tests/
 packages/
   opal-types/             opal-globals.d.ts — canonical ambient types for
-                           every proxy global (single source of truth)
+                           every proxy global
   stub/                   createOpalStub() — the shared sandbox stub tests
                           load a built script against
 template/                 copy this to start a new TypeScript script

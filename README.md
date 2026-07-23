@@ -1,14 +1,14 @@
 # scripts
 
-> The official public home of [Opal](https://opal.wtf) scripts: a curated
-> gallery, a TypeScript template to build your own, and a PR-based
-> contribution pipeline with CI gates — managed like a script marketplace,
-> Raycast-extensions-style.
+> The official home of [Opal](https://opal.wtf) scripts: a gallery of
+> ready-to-run examples, a TypeScript template to build your own, and a
+> PR-based contribution pipeline with CI gates. Run like a small script
+> marketplace, Raycast-extensions-style.
 
 ## What this is
 
 Opal's scripting engine loads plain `.js` files from an `opal/scripts/`
-folder and exposes a curated set of proxy globals (`client`, `player`,
+folder and exposes a fixed set of proxy globals (`client`, `player`,
 `world`, `renderer`, `palette`, `storage`, ...) onto the running Minecraft
 client. This repo is where every official script is built, tested, and
 released from: one folder per script, a canonical set of API typings, a
@@ -36,8 +36,8 @@ scripts/<id>/            one folder per script
   src/                     entry point per manifest.entry (.js or .ts)
   tests/                   optional; runs against packages/stub in CI
 packages/
-  opal-types/             canonical opal-globals.d.ts — single source of truth
-                           for the scripting API's ambient types
+  opal-types/             canonical opal-globals.d.ts — the ambient types for
+                           the scripting API
   stub/                   shared sandbox stub (createOpalStub) that lets a
                            test load and drive a built script outside a live client
 template/                 copy this folder to start a new TypeScript script —
@@ -121,9 +121,9 @@ involves no host object and no GraalVM context. A member the stub answers
 may still be completely unreachable in-game. The real gate for API *shape*
 is the sandbox test in the `opal` client repo, which evals through a live
 Graal context against real host objects under the actual `HostAccess.EXPLICIT`
-policy. The stub models the real contract — collections are `ScriptList`-shaped,
-there are no bean properties, and reading an unexported member throws — but
-that only narrows the gap, it does not close it. When you add a script,
+policy. The stub models the real contract: collections are `ScriptList`-shaped,
+there are no bean properties, and reading an unexported member throws. That
+only narrows the gap, it does not close it. When you add a script,
 check the method you are calling against
 [`packages/opal-types`](packages/opal-types/opal-globals.d.ts) (the
 canonical ambient types, jsdoc'd per member) and the client's own in-app
@@ -133,7 +133,7 @@ scripting documentation, not against the stub's behavior alone.
 
 **[Chomp](scripts/chomp/)** is the flagship: a full roguelite arcade
 micro-game (rounds, perks, elites, mutators, meta progression) that doubles
-as a teaching example for every scripting surface at once, backed by a
+as a teaching example for every scripting surface, backed by a
 deterministic 326-check test harness. See its own
 [README](scripts/chomp/README.md) for controls and systems.
 

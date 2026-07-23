@@ -1,6 +1,6 @@
 # scripts
 
-> The official public home of Opal scripts — a curated gallery, a
+> The official home of Opal scripts: a gallery of ready-to-run examples, a
 > TypeScript template, and a CI-gated contribution pipeline. One folder per
 > script under `scripts/<id>/`; canonical API typings and a shared test stub
 > live in `packages/`; `template/` is the copy-to-start scaffold.

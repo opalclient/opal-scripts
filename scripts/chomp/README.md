@@ -67,7 +67,7 @@ unavailable the game runs fine, session-only, and writes nothing.
 
 ## Testing
 
-`tests/harness.js` is a deterministic plain-script harness — **326 checks** —
+`tests/harness.js` is a deterministic plain-script harness (**326 checks**)
 that boots the engine outside the client against `@opal-scripts/stub` with a
 frozen clock and seeded `Math.random`, so its output is identical run to run. It
 covers 300 seeded mazes (reachability, mirror symmetry, pellet floors, power

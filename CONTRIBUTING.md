@@ -39,8 +39,8 @@ before the detailed steps below:
    `id` you'll give it.
 3. **Rename the id everywhere**: the folder name, `manifest.json`'s `id`,
    and `package.json`'s `name` (`@opal-scripts/<your-id>`) all need to
-   match. `registerScript({...})` doesn't take an `id` — only `name`,
-   `version`, and `authors` — so update its `name` too if you want the
+   match. `registerScript({...})` doesn't take an `id` (only `name`,
+   `version`, and `authors`), so update its `name` too if you want the
    display name to change; it doesn't have to match the folder/id.
 4. **`bun install`** at the repo root. This links your new folder into the
    workspace so it can see `@opal-scripts/opal-types` (ambient globals) and
@@ -160,7 +160,7 @@ Every commit subject **must** follow Conventional Commits:
 ```
 <type>(<optional scope>): <imperative summary, lowercase, no period>
 
-<optional body — wrap at ~72 chars — explain the why>
+<optional body explaining the why, wrapped at ~72 chars>
 
 <optional Fixes #123 or BREAKING CHANGE: ... footer>
 ```
