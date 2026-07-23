@@ -13,9 +13,10 @@
 //  like the real GraalVM engine injects these names with no module system.
 // =============================================================================
 
-/** storage is per-script and keyed by whatever string you pick - scope your
- * keys (e.g. a "my-script." prefix) so a copy-pasted script never collides
- * with another script's storage. */
+/** storage is already isolated per script - two different scripts can never
+ * collide on the same key, so that's not what a prefix buys you here. Prefix
+ * keys (e.g. "counter." vs "settings.") to keep multiple modules/features
+ * WITHIN this one script from colliding with each other on the same store. */
 const COUNTER_KEY = "template.counter";
 
 /**
