@@ -84,8 +84,8 @@ scripts that ship a palette view — like [Chomp](scripts/chomp/)).
    `scripts/my-cool-script/package.json` (`"name": "@opal-scripts/my-cool-script"`).
 3. **Install and write it**: `bun install`, then edit `src/main.ts`. Every
    Opal global is typed ambiently by `@opal-scripts/opal-types` — nothing to
-   import. Prefer plain JavaScript? Copy any existing `scripts/<id>/` folder
-   instead and drop the `tsconfig.json` — the build/test tools work with either.
+   import. Prefer plain JavaScript? Copy `scripts/milestone-toasts/` instead
+   and drop the `tsconfig.json` — the build/test tools work with either.
 4. **Typecheck, build, and test**:
    ```bash
    bunx tsc --noEmit -p scripts/my-cool-script   # if you kept the tsconfig

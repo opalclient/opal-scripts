@@ -237,9 +237,9 @@ anything beyond the technical, example-focused scope of this repo — see
   top of the entry file (see any existing `scripts/<id>/src/` for the shape).
 - JSDoc on non-trivial helper functions (params + returns), matching the
   style already in the gallery.
-- `bun run lint` (Biome) covers `tools/`, `packages/`, and `template/`.
-  Script folders under `scripts/` aren't Biome-linted individually today —
-  match the existing style by hand.
+- `bun run lint` (Biome) covers `tools/`, `packages/`, `template/`, and
+  `scripts/chomp/src/`. TS script sources are linted; plain-JS gallery
+  scripts aren't — match the existing style by hand.
 - Tests: `packages/stub`'s `createOpalStub()` installs the sandbox globals
   onto `globalThis`. A script exports its pure helpers the same way as
   before — a guarded

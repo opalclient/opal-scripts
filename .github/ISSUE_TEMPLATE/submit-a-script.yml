@@ -54,7 +54,7 @@ body:
         Which proxy globals/events does this touch (mc, player, renderer,
         storage, keys, module.on(...), ...)? See
         https://opal.wtf/docs/scripting for the reference.
-      placeholder: e.g. player.getHealth(), renderer.color(...), module.on("tick", ...)
+      placeholder: e.g. player.getHealth(), renderer.color(...), module.on("preGameTick", ...)
     validations:
       required: true
 

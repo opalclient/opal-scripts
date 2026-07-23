@@ -34,7 +34,7 @@ For anything beyond a typo or one-line fix, open an issue first (the
 ## Gate checklist
 
 This mirrors what CI runs, in order — check each box after running it
-locally (see [CONTRIBUTING.md](../CONTRIBUTING.md#local-commands)):
+locally (see [CONTRIBUTING.md](https://github.com/opalclient/scripts/blob/main/CONTRIBUTING.md#local-commands)):
 
 - [ ] **validate** — `bun run validate` passes (manifest schema + the
       publish-safety grep: no machine paths, no real secrets/account IDs)

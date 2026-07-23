@@ -73,8 +73,8 @@ The rest of this document covers each of those steps in more detail.
 
 1. **Copy `template/`** to `scripts/<your-id>/` (kebab-case, matching the
    `id` you'll put in the manifest) — the fastest path to a typechecked,
-   bundled, tested TypeScript script. Prefer plain JavaScript? Copy any
-   existing `scripts/<id>/` folder instead and drop the `tsconfig.json`; the
+   bundled, tested TypeScript script. Prefer plain JavaScript? Copy
+   `scripts/milestone-toasts/` instead and drop the `tsconfig.json`; the
    build/test tools work with either. See [template/README.md](template/README.md)
    for the full copy-folder walkthrough.
 2. **Fill in `manifest.json`**: `id` (equals the folder name), `name`,
@@ -192,8 +192,9 @@ category, e.g. `feat(character): add packet-no-fall`).
 - TypeScript scripts (anything with a `tsconfig.json`) typecheck under the
   strict compiler options in `tsconfig.base.json` — the per-folder
   `tsc --noEmit` has to pass. `bun run lint` (Biome) covers `tools/`,
-  `packages/`, and `template/` only; `scripts/**` isn't Biome-linted
-  individually today, so match the existing style by hand there.
+  `packages/`, `template/`, and `scripts/chomp/src/`. TS script sources
+  are linted; plain-JS gallery scripts aren't, so match the existing style
+  by hand there.
 - No obfuscation — reviewers (and downstream users learning from your script)
   need to read the code plainly.
 - No network calls, no filesystem access outside what the Opal APIs expose,
