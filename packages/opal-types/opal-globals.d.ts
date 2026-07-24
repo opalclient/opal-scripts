@@ -666,6 +666,74 @@ interface InstantaneousSendPacketEvent extends PacketEvent {}
 /** An inbound packet is received on the network thread, before main-thread queueing. Cancellable. */
 interface InstantaneousReceivePacketEvent extends PacketEvent {}
 
+/**
+ * `preBlockPlace` — fired before a block-placement / right-click-on-block
+ * interaction (`mc.interactionManager.interactBlock()`) is processed.
+ * Cancellable.
+ */
+interface PreBlockPlaceEvent extends CancellableEvent {
+    /** Hand performing the placement — `"main"` or `"off"`. */
+    getHand(): "main" | "off";
+    /** X coordinate of the target block. */
+    getX(): number;
+    /** Y coordinate of the target block. */
+    getY(): number;
+    /** Z coordinate of the target block. */
+    getZ(): number;
+    /** Face being placed against, lowercase (matches `Direction.getName()`). */
+    getFace(): DirectionName;
+    /** Whether the player's eye position is inside the target block (placing while intersecting it). */
+    isInside(): boolean;
+}
+
+/**
+ * `preUseItem` — fired before the held item is used (right-click use).
+ * Cancellable. `getHand()` reports `"main"` by convention today: the vanilla
+ * method this fires from (`Minecraft.startUseItem()`) evaluates both hands
+ * internally and does not report which one triggered the use.
+ */
+interface PreUseItemEvent extends CancellableEvent {
+    getHand(): "main" | "off";
+}
+
+/**
+ * `preAttack` — fired before the player's attack on an entity is processed.
+ * Cancellable; also gates `mc.interactionManager.attackEntity()` — a handler
+ * that cancels this blocks that call too.
+ */
+interface PreAttackEvent extends CancellableEvent {
+    getTargetId(): number;
+    /** Namespaced registry id of the target's entity type, e.g. `"minecraft:zombie"`. */
+    getTargetType(): string;
+    getTargetName(): string;
+}
+
+/**
+ * `preInteractEntity` — fired before a right-click interaction on an entity
+ * is processed. Cancellable; also gates
+ * `mc.interactionManager.interactEntity()` — a handler that cancels this
+ * blocks that call too.
+ */
+interface PreInteractEntityEvent extends CancellableEvent {
+    getTargetId(): number;
+    /** Namespaced registry id of the target's entity type, e.g. `"minecraft:zombie"`. */
+    getTargetType(): string;
+    getHand(): "main" | "off";
+}
+
+/**
+ * `preSlotClick` — fired before a container slot click is processed.
+ * Cancellable; also gates `net.slotClick()` — a handler that cancels this
+ * blocks that call too, since both go through the same vanilla path.
+ */
+interface PreSlotClickEvent extends CancellableEvent {
+    getContainerId(): number;
+    getSlot(): number;
+    getButton(): number;
+    /** camelCase mode token, symmetric with `net.slotClick()`'s `mode` parameter. */
+    getMode(): SlotClickMode;
+}
+
 /** `attack` — the player attacks an entity, before the interaction is processed. Not cancellable. */
 interface AttackEvent {
     /** The entity being attacked. The flattened getters below are shortcuts for its reads. */
@@ -794,6 +862,11 @@ interface ScriptModuleEvents {
     receivePacket: (event: ReceivePacketEvent) => void;
     instantaneousSendPacket: (event: InstantaneousSendPacketEvent) => void;
     instantaneousReceivePacket: (event: InstantaneousReceivePacketEvent) => void;
+    preBlockPlace: (event: PreBlockPlaceEvent) => void;
+    preUseItem: (event: PreUseItemEvent) => void;
+    preAttack: (event: PreAttackEvent) => void;
+    preInteractEntity: (event: PreInteractEntityEvent) => void;
+    preSlotClick: (event: PreSlotClickEvent) => void;
     attack: (event: AttackEvent) => void;
     swing: (event: SwingEvent) => void;
     itemUse: (event: ItemUseEvent) => void;
@@ -1088,8 +1161,14 @@ interface InteractionManagerProxy {
     cancelBlockBreaking(): void;
     /** Whether a block break is currently in progress. */
     isBreakingBlock(): boolean;
-    /** Attacks an entity with the local player's main hand. */
+    /** Attacks an entity with the local player's main hand. Gated by the cancellable `preAttack` event — a handler that cancels it blocks this call too. */
     attackEntity(entity: Entity): void;
+    /**
+     * Right-clicks (interacts with) an entity with the given hand — the
+     * right-click equivalent of `attackEntity`. Gated by the cancellable
+     * `preInteractEntity` event — a handler that cancels it blocks this call too.
+     */
+    interactEntity(entity: Entity, hand: InteractionHand): void;
     /** Uses the item in the given hand (right-click use, not on a block). */
     interactItem(hand: InteractionHand): void;
     /** Stops using an item (e.g. releasing a bow or stopping eating). */
@@ -1131,6 +1210,86 @@ interface MinecraftProxy {
     getInteractionManager(): InteractionManagerProxy;
 }
 declare const mc: MinecraftProxy;
+
+/* ============================================================================
+ * net — curated serverbound packet-send proxy (reference/core.mdx "Net Proxy")
+ * ========================================================================== */
+
+/** Valid `net.playerCommand` action strings — `ServerboundPlayerCommandPacket.Action`. */
+type PlayerCommandAction =
+    | "stopSleeping"
+    | "startSprinting"
+    | "stopSprinting"
+    | "startRidingJump"
+    | "stopRidingJump"
+    | "openInventory"
+    | "startFallFlying";
+
+/** `net.playerAction` dig actions — require `blockPos`/`face`, and throw without them. */
+type PlayerActionDigAction = "startDestroyBlock" | "stopDestroyBlock" | "abortDestroyBlock";
+/** `net.playerAction` position-free actions — valid with or without `blockPos`/`face` (ignored when given). */
+type PlayerActionFreeAction = "dropAllItems" | "dropItem" | "releaseUseItem" | "swapItemWithOffhand";
+/** Every valid `net.playerAction` action string. */
+type PlayerAction = PlayerActionDigAction | PlayerActionFreeAction;
+
+/**
+ * Valid `net.slotClick` `mode` string — the same camelCase token set
+ * `preSlotClick.getMode()` reports back, symmetrically.
+ */
+type SlotClickMode = "pickup" | "quickMove" | "swap" | "clone" | "throw" | "quickCraft" | "pickupAll";
+
+/**
+ * Curated serverbound packet sends — a script builds and sends a handful of
+ * real vanilla packets directly, rather than going through a higher-level
+ * proxy method. Every send here is a genuine packet over the network
+ * connection, subject to the same `sendPacket`/`instantaneousSendPacket`
+ * hooks as any other outbound packet, and a no-op with no connection.
+ *
+ * **Invalid input throws.** An unrecognized action/mode string or an
+ * out-of-range numeric parameter throws a host `IllegalArgumentException`
+ * whose message lists the valid values. It is still catchable in a script's
+ * `try`/`catch` — `e.message` carries the valid-value list.
+ */
+interface NetProxy {
+    /**
+     * Sends `ServerboundSwingPacket(hand)` — a server-only "ghost" swing.
+     * Unlike `player.swingHand()`, no local swing animation plays.
+     */
+    swing(hand: InteractionHand): void;
+    /**
+     * Sends `ServerboundSetCarriedItemPacket(slot)` — a raw carried-item
+     * packet. `slot` must be `0`-`8`; out of range throws.
+     */
+    heldSlot(slot: number): void;
+    /**
+     * Sends `ServerboundPlayerCommandPacket` for the given action. See
+     * {@link PlayerCommandAction} for the valid set.
+     */
+    playerCommand(action: PlayerCommandAction): void;
+    /**
+     * Sends `ServerboundPlayerActionPacket` for a position-free action
+     * (`blockPos`/`face` are not needed and default to `BlockPos.ZERO`/
+     * `DOWN`). Passing a dig action here throws — use the 3-argument
+     * overload instead.
+     */
+    playerAction(action: PlayerActionFreeAction): void;
+    /**
+     * Sends `ServerboundPlayerActionPacket` with an explicit `blockPos`/
+     * `face`. Required for a dig action ({@link PlayerActionDigAction});
+     * a position-free action accepts but ignores both. A dig action with a
+     * `null` `blockPos`/`face` throws.
+     */
+    playerAction(action: PlayerAction, blockPos: BlockPos, face: Direction): void;
+    /**
+     * Routes a container click through the currently open container menu
+     * (`mc.gameMode.handleContainerInput()`) — a no-op if none is open.
+     * `slot` is validated against the open menu's slot count; `button` must
+     * be non-negative. Gated by the cancellable `preSlotClick` event (same
+     * vanilla path as a real inventory click).
+     */
+    slotClick(slot: number, button: number, mode: SlotClickMode): void;
+}
+declare const net: NetProxy;
 
 /* ============================================================================
  * player — character/player.mdx

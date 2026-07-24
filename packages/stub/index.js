@@ -919,8 +919,71 @@ function createOpalStub(options = {}) {
         cancelBlockBreaking: noop,
         isBreakingBlock: returning(false),
         attackEntity: noop,
+        interactEntity: noop,
         interactItem: noop,
         stopUsingItem: noop,
+    });
+
+    // =========================================================================
+    //  9b. net — curated serverbound packet-send proxy. Sends are no-ops (no
+    //      real connection in a Node stub); action/mode strings and numeric
+    //      ranges ARE validated and throw, mirroring the real proxy's
+    //      catchable-in-JS `IllegalArgumentException` path (see the report's
+    //      `netProxyInvalidInputIsCatchableInJs` test) so a script's own
+    //      try/catch around a bad string can be exercised here too.
+    // =========================================================================
+
+    const NET_PLAYER_COMMAND_ACTIONS = [
+        "stopSleeping",
+        "startSprinting",
+        "stopSprinting",
+        "startRidingJump",
+        "stopRidingJump",
+        "openInventory",
+        "startFallFlying",
+    ];
+    const NET_PLAYER_ACTION_DIG = ["startDestroyBlock", "stopDestroyBlock", "abortDestroyBlock"];
+    const NET_PLAYER_ACTION_FREE = ["dropAllItems", "dropItem", "releaseUseItem", "swapItemWithOffhand"];
+    const NET_SLOT_CLICK_MODES = ["pickup", "quickMove", "swap", "clone", "throw", "quickCraft", "pickupAll"];
+
+    /** Throws an `Error` listing the valid values — stands in for the real
+     * proxy's host `IllegalArgumentException`, which is likewise catchable in
+     * a script's `try`/`catch` with the valid-value list in `e.message`. */
+    function invalidNetArgument(paramName, value, validValues) {
+        throw new Error(`Invalid ${paramName} '${value}'. Valid values: ${validValues.join(", ")}.`);
+    }
+
+    const net = hostObject("net", {
+        swing: noop,
+        heldSlot: (slot) => {
+            if (!Number.isInteger(slot) || slot < 0 || slot > 8) {
+                invalidNetArgument("held slot", slot, ["0-8"]);
+            }
+        },
+        playerCommand: (action) => {
+            if (!NET_PLAYER_COMMAND_ACTIONS.includes(action)) {
+                invalidNetArgument("playerCommand action", action, NET_PLAYER_COMMAND_ACTIONS);
+            }
+        },
+        playerAction: (action, blockPos, face) => {
+            const validActions = [...NET_PLAYER_ACTION_DIG, ...NET_PLAYER_ACTION_FREE];
+            if (!validActions.includes(action)) {
+                invalidNetArgument("playerAction action", action, validActions);
+            }
+            if (NET_PLAYER_ACTION_DIG.includes(action) && (blockPos === undefined || face === undefined)) {
+                throw new Error(
+                    `playerAction '${action}' requires a blockPos and face — call the 3-argument overload for a dig action.`,
+                );
+            }
+        },
+        slotClick: (_slot, button, mode) => {
+            if (!NET_SLOT_CLICK_MODES.includes(mode)) {
+                invalidNetArgument("slotClick mode", mode, NET_SLOT_CLICK_MODES);
+            }
+            if (button < 0) {
+                invalidNetArgument("slotClick button", button, ["non-negative integers"]);
+            }
+        },
     });
 
     // mc.player / mc.world are deliberately absent — GraalJS does no bean-property
@@ -1011,6 +1074,7 @@ function createOpalStub(options = {}) {
         keys,
         timer,
         mc,
+        net,
         MAIN_HAND: "MAIN_HAND",
         OFF_HAND: "OFF_HAND",
         BlockPos,
@@ -1265,6 +1329,99 @@ function createOpalStub(options = {}) {
         return { isMainHand: () => mainHand };
     }
 
+    /** Fake `preBlockPlace` payload. Cancellable — same `state`/`calls.cancel` shape as `makeFakeJumpEvent`. */
+    function makeFakePreBlockPlaceEvent(overrides = {}) {
+        const state = { hand: "main", x: 0, y: 64, z: 0, face: "up", inside: false, cancelled: false, ...overrides };
+        const calls = { cancel: 0 };
+        return {
+            getHand: () => state.hand,
+            getX: () => state.x,
+            getY: () => state.y,
+            getZ: () => state.z,
+            getFace: () => state.face,
+            isInside: () => state.inside,
+            isCancelled: () => state.cancelled,
+            cancel: () => {
+                calls.cancel += 1;
+                state.cancelled = true;
+            },
+            calls,
+        };
+    }
+
+    /** Fake `preUseItem` payload. Cancellable. `hand` defaults to `"main"` per the real event's convention. */
+    function makeFakePreUseItemEvent(overrides = {}) {
+        const state = { hand: "main", cancelled: false, ...overrides };
+        const calls = { cancel: 0 };
+        return {
+            getHand: () => state.hand,
+            isCancelled: () => state.cancelled,
+            cancel: () => {
+                calls.cancel += 1;
+                state.cancelled = true;
+            },
+            calls,
+        };
+    }
+
+    /** Fake `preAttack` payload. Cancellable. */
+    function makeFakePreAttackEvent(overrides = {}) {
+        const state = {
+            targetId: 1,
+            targetType: "minecraft:zombie",
+            targetName: "Zombie",
+            cancelled: false,
+            ...overrides,
+        };
+        const calls = { cancel: 0 };
+        return {
+            getTargetId: () => state.targetId,
+            getTargetType: () => state.targetType,
+            getTargetName: () => state.targetName,
+            isCancelled: () => state.cancelled,
+            cancel: () => {
+                calls.cancel += 1;
+                state.cancelled = true;
+            },
+            calls,
+        };
+    }
+
+    /** Fake `preInteractEntity` payload. Cancellable. */
+    function makeFakePreInteractEntityEvent(overrides = {}) {
+        const state = { targetId: 1, targetType: "minecraft:zombie", hand: "main", cancelled: false, ...overrides };
+        const calls = { cancel: 0 };
+        return {
+            getTargetId: () => state.targetId,
+            getTargetType: () => state.targetType,
+            getHand: () => state.hand,
+            isCancelled: () => state.cancelled,
+            cancel: () => {
+                calls.cancel += 1;
+                state.cancelled = true;
+            },
+            calls,
+        };
+    }
+
+    /** Fake `preSlotClick` payload. Cancellable. `mode` uses the same camelCase token set as `net.slotClick`. */
+    function makeFakePreSlotClickEvent(overrides = {}) {
+        const state = { containerId: 0, slot: 0, button: 0, mode: "pickup", cancelled: false, ...overrides };
+        const calls = { cancel: 0 };
+        return {
+            getContainerId: () => state.containerId,
+            getSlot: () => state.slot,
+            getButton: () => state.button,
+            getMode: () => state.mode,
+            isCancelled: () => state.cancelled,
+            cancel: () => {
+                calls.cancel += 1;
+                state.cancelled = true;
+            },
+            calls,
+        };
+    }
+
     // =========================================================================
     //  13. The stub instance: globals + install/eval + determinism + capture
     //      surfaces + every fake builder (a superset of the old opal-stub API).
@@ -1319,6 +1476,11 @@ function createOpalStub(options = {}) {
         makeFakeBlockUpdateEvent,
         makeFakeInputEvent,
         makeFakeSwingEvent,
+        makeFakePreBlockPlaceEvent,
+        makeFakePreUseItemEvent,
+        makeFakePreAttackEvent,
+        makeFakePreInteractEntityEvent,
+        makeFakePreSlotClickEvent,
     };
 }
 
